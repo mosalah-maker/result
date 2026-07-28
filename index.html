@@ -23,23 +23,18 @@
         }
 
         :root {
-            /* ألوان مستوحاة من اللوجو (الأزرق المعدني والنيون) */
-            --bg-color: #03080e; /* لون خلفية داكن جداً */
+            --bg-color: #03080e;
             --bg-gradient: radial-gradient(circle at 50% 0%, #162a42 0%, #03080e 70%);
             --card-bg: rgba(13, 27, 42, 0.6);
             --glass-border: rgba(54, 143, 255, 0.2);
-            
             --neon-glow: rgba(0, 150, 255, 0.4);
             --neon-text: #00c3ff;
-            
             --primary-dark: #0b1d2e;
             --primary-blue: #1a6bbd;
             --primary-light: #4da6ff;
             --accent: #00a6ff;
-            
             --text-main: #e0f0ff;
             --text-soft: #88b0d6;
-            
             --shadow-sm: 0 12px 30px rgba(0, 20, 40, 0.5);
             --shadow-hover: 0 25px 45px rgba(0, 100, 255, 0.2);
             --radius-card: 28px;
@@ -63,7 +58,6 @@
             overflow-x: hidden;
         }
 
-        /* ----- Main Container (Glassmorphism Dark) ----- */
         .glass-card {
             max-width: 640px;
             width: 100%;
@@ -79,7 +73,6 @@
             position: relative;
         }
         
-        /* تأثير الخطوط التكنولوجية (مثل اللوجو) */
         .glass-card::before {
             content: '';
             position: absolute;
@@ -91,7 +84,6 @@
             opacity: 0.7;
         }
 
-        /* ----- Header & Logo Text ----- */
         .header {
             display: flex;
             flex-direction: column;
@@ -144,7 +136,6 @@
             letter-spacing: 1px;
         }
 
-        /* ----- Search Box ----- */
         .search-box {
             margin: 2.2rem 0 1.8rem;
             display: flex;
@@ -186,7 +177,6 @@
             font-size: 1.1rem;
         }
 
-        /* Remove number arrows */
         .input-group input[type="number"]::-webkit-inner-spin-button,
         .input-group input[type="number"]::-webkit-outer-spin-button {
             -webkit-appearance: none;
@@ -196,7 +186,6 @@
             -moz-appearance: textfield;
         }
 
-        /* ----- Button with Ripple & Neon ----- */
         .btn-primary {
             position: relative;
             overflow: hidden;
@@ -227,7 +216,6 @@
             transition: 0.08s;
         }
 
-        /* Ripple effect */
         .ripple {
             position: absolute;
             border-radius: 50%;
@@ -240,7 +228,6 @@
             to { transform: scale(4.5); opacity: 0; }
         }
 
-        /* ----- Result / Status Cards ----- */
         #resultContainer {
             margin-top: 1.8rem;
             min-height: 80px;
@@ -285,7 +272,12 @@
             text-shadow: 0 0 10px rgba(0, 100, 255, 0.3);
         }
 
-        /* Error / Not found / Not announced */
+        .rank-value {
+            color: #ffd700;
+            font-weight: bold;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
         .error-card {
             background: rgba(40, 0, 0, 0.6);
             backdrop-filter: blur(8px);
@@ -325,7 +317,6 @@
             font-size: 2rem;
         }
 
-        /* Skeleton Loader */
         .skeleton-wrapper {
             display: flex;
             flex-direction: column;
@@ -346,7 +337,6 @@
             100% { background-position: -200% 0; }
         }
 
-        /* Spinner */
         .spinner-center {
             display: flex;
             justify-content: center;
@@ -364,7 +354,6 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ----- Footer ----- */
         .footer {
             margin-top: 2.5rem;
             font-size: 0.95rem;
@@ -374,7 +363,6 @@
             opacity: 0.8;
         }
 
-        /* ----- Animations & Utilities ----- */
         @keyframes fadeUp {
             0% { opacity: 0; transform: translateY(18px); }
             100% { opacity: 1; transform: translateY(0); }
@@ -382,14 +370,12 @@
 
         .fade-in { animation: fadeUp 0.45s ease forwards; }
 
-        /* Focus-visible */
         .input-group input:focus-visible,
         .btn-primary:focus-visible {
             outline: 3px solid var(--primary-light);
             outline-offset: 3px;
         }
 
-        /* Responsive */
         @media (max-width: 480px) {
             .glass-card { padding: 1.5rem 1.2rem; }
             .header h1 { font-size: 2.2rem; letter-spacing: 2px; }
@@ -425,8 +411,6 @@
         .status-badge.success { background: rgba(40, 200, 100, 0.15); color: #00ff88; border-color: rgba(0, 255, 136, 0.2); }
         .status-badge.fail { background: rgba(255, 50, 50, 0.15); color: #ff6b6b; border-color: rgba(255, 80, 80, 0.2); }
 
-
-        /* ----- Popup Overlay (Instagram Follow - Neon Style) ----- */
         #popupOverlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -553,7 +537,6 @@
 
     <!-- Main App -->
     <main class="glass-card" role="main">
-        <!-- Header with Tech Style -->
         <header class="header">
             <div class="logo-icon-container">
                 <span>V</span>
@@ -562,7 +545,6 @@
             <p>نتيجة الثانوية العامة - استعلام فوري</p>
         </header>
 
-        <!-- Search Section -->
         <section class="search-box" role="search" aria-label="استعلام نتيجة">
             <div class="input-group">
                 <input type="number" id="seatInput" placeholder="أدخل رقم الجلوس" aria-label="رقم الجلوس" inputmode="numeric" autofocus>
@@ -572,12 +554,10 @@
             </button>
         </section>
 
-        <!-- Result Container -->
         <div id="resultContainer" aria-live="polite" aria-atomic="true">
             <!-- dynamic content -->
         </div>
 
-        <!-- Footer -->
         <footer class="footer">
             © جميع الحقوق محفوظة لدى VexoLab / م. محمد صلاح 2026
         </footer>
@@ -604,7 +584,6 @@
             const searchBtn = document.getElementById('searchBtn');
             const resultContainer = document.getElementById('resultContainer');
             
-            // Popup refs
             const popupOverlay = document.getElementById('popupOverlay');
             const followBtn = document.getElementById('followBtn');
             const closePopupBtn = document.getElementById('closePopupBtn');
@@ -612,10 +591,11 @@
             // ---------- CACHE ----------
             const cache = new Map();
 
-            // ---------- POPUP LOGIC ----------
+            // ---------- POPUP LOGIC (مع localStorage) ----------
             let isUnlocked = false;
 
-            if (sessionStorage.getItem('vexolab_unlocked') === 'true') {
+            // ✅ localStorage بدلاً من sessionStorage
+            if (localStorage.getItem('vexolab_unlocked') === 'true') {
                 isUnlocked = true;
             } else {
                 setTimeout(() => {
@@ -626,7 +606,8 @@
             followBtn.addEventListener('click', function() {
                 window.open('https://www.instagram.com/_vexo.lab__?igsh=aGFya2o5MW41ZXU=', '_blank');
                 isUnlocked = true;
-                sessionStorage.setItem('vexolab_unlocked', 'true');
+                // ✅ localStorage بدلاً من sessionStorage
+                localStorage.setItem('vexolab_unlocked', 'true');
                 popupOverlay.classList.remove('active');
             });
 
@@ -667,14 +648,6 @@
                 `;
             }
 
-            function showSpinner() {
-                resultContainer.innerHTML = `
-                    <div class="spinner-center fade-in">
-                        <div class="spinner" role="status" aria-label="جاري التحميل"></div>
-                    </div>
-                `;
-            }
-
             function renderStudent(seat, studentData) {
                 const statusText = STATUS[studentData.s] || "غير معروف";
                 let badgeClass = 'status-badge';
@@ -684,12 +657,29 @@
                     badgeClass += ' fail';
                 }
 
+                const rankDisplay = studentData.rank ? 
+                    `<span class="rank-value">#${studentData.rank}</span>` : 
+                    `<span style="color: #5a7a9a;">غير محدد</span>`;
+
                 resultContainer.innerHTML = `
                     <div class="result-card fade-in">
                         <div class="student-name">${studentData.n}</div>
-                        <div class="row"><span class="result-label">رقم الجلوس</span><span class="result-value">${seat}</span></div>
-                        <div class="row"><span class="result-label">المجموع</span><span class="result-value">${studentData.t}</span></div>
-                        <div class="row"><span class="result-label">الحالة</span><span class="result-value"><span class="${badgeClass}">${statusText}</span></span></div>
+                        <div class="row">
+                            <span class="result-label">رقم الجلوس</span>
+                            <span class="result-value">${seat}</span>
+                        </div>
+                        <div class="row">
+                            <span class="result-label">🏆 الترتيب</span>
+                            <span class="result-value">${rankDisplay}</span>
+                        </div>
+                        <div class="row">
+                            <span class="result-label">المجموع</span>
+                            <span class="result-value">${studentData.t}</span>
+                        </div>
+                        <div class="row">
+                            <span class="result-label">الحالة</span>
+                            <span class="result-value"><span class="${badgeClass}">${statusText}</span></span>
+                        </div>
                     </div>
                 `;
             }
@@ -808,7 +798,8 @@
             seatInput.setAttribute('aria-describedby', 'searchBtn');
             seatInput.focus();
 
-            console.log('✅ VexoLab System Ready (Dark Tech Style)');
+            console.log('✅ VexoLab System Ready');
+            console.log('✅ localStorage enabled - المتابعة ثابتة');
         })();
     </script>
 </body>
