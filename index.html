@@ -284,6 +284,15 @@
             margin-bottom: 0.4rem;
             text-shadow: 0 0 10px rgba(0, 100, 255, 0.3);
         }
+        .rank-value {
+            color: #ffd700;
+            font-weight: 700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        .rank-not-available {
+            color: var(--text-soft);
+            font-weight: 400;
+        }
 
         /* Error / Not found / Not announced */
         .error-card {
@@ -690,6 +699,24 @@
                 // حساب النسبة المئوية
                 const percentage = ((studentData.t / TOTAL_SCORE) * 100).toFixed(2);
 
+                // التحقق من وجود rank وعرضه
+                let rankHtml = '';
+                if (studentData.rank !== undefined && studentData.rank !== null) {
+                    rankHtml = `
+                        <div class="row">
+                            <span class="result-label">الترتيب على مستوى الجمهورية</span>
+                            <span class="result-value rank-value">#${studentData.rank.toLocaleString('ar-EG')}</span>
+                        </div>
+                    `;
+                } else {
+                    rankHtml = `
+                        <div class="row">
+                            <span class="result-label">الترتيب على مستوى الجمهورية</span>
+                            <span class="result-value rank-not-available">غير متاح</span>
+                        </div>
+                    `;
+                }
+
                 resultContainer.innerHTML = `
                     <div class="result-card fade-in">
                         <div class="student-name">${studentData.n}</div>
@@ -697,6 +724,7 @@
                         <div class="row"><span class="result-label">المجموع</span><span class="result-value">${studentData.t} من ${TOTAL_SCORE}</span></div>
                         <div class="row"><span class="result-label">النسبة المئوية</span><span class="result-value">${percentage}%</span></div>
                         <div class="row"><span class="result-label">الحالة</span><span class="result-value"><span class="${badgeClass}">${statusText}</span></span></div>
+                        ${rankHtml}
                     </div>
                 `;
             }
