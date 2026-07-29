@@ -823,7 +823,7 @@
                 return parts.join('');
             }
 
-            // ---------- SEAT SEARCH (original functionality) ----------
+            // ---------- SEAT SEARCH (original functionality with new paths) ----------
             async function searchBySeat(seatNumber) {
                 if (!isUnlocked) {
                     popupOverlay.classList.add('active');
@@ -861,7 +861,8 @@
                     if (cache.has(cacheKey)) {
                         data = cache.get(cacheKey);
                     } else {
-                        const response = await fetch(`output/data/${folderName}/${prefix}.json`);
+                        // NEW PATH: data/data_X/prefix.json
+                        const response = await fetch(`data/${folderName}/${prefix}.json`);
                         
                         if (response.status === 404) {
                             renderNotAnnounced();
@@ -901,7 +902,7 @@
                 }
             }
 
-            // ---------- NAME SEARCH (new functionality) ----------
+            // ---------- NAME SEARCH (new functionality with new paths) ----------
             async function searchByName(name) {
                 if (!isUnlocked) {
                     popupOverlay.classList.add('active');
@@ -926,8 +927,7 @@
                 const filePrefix = nameKey.substring(0, 2);
                 
                 // Determine folder: names_1, names_2, etc.
-                // Use a hash or simple mapping based on the file name
-                // We'll use a simple approach: get the Unicode code point sum modulo something
+                // Use a hash based on the file prefix
                 let hash = 0;
                 for (let i = 0; i < filePrefix.length; i++) {
                     hash = (hash * 31 + filePrefix.charCodeAt(i)) & 0xFFFFFFFF;
@@ -944,8 +944,8 @@
                     if (cache.has(cacheKey)) {
                         data = cache.get(cacheKey);
                     } else {
-                        // Try to find the file in the correct folder
-                        const response = await fetch(`output/names/${folderName}/${filePrefix}.json`);
+                        // NEW PATH: names/names_X/filePrefix.json
+                        const response = await fetch(`names/${folderName}/${filePrefix}.json`);
                         
                         if (response.status === 404) {
                             renderNotFound();
@@ -1019,7 +1019,8 @@
                     if (cache.has(cacheKey)) {
                         data = cache.get(cacheKey);
                     } else {
-                        const response = await fetch(`output/data/${folderName}/${prefix}.json`);
+                        // NEW PATH: data/data_X/prefix.json
+                        const response = await fetch(`data/${folderName}/${prefix}.json`);
                         
                         if (response.status === 404) {
                             renderNotAnnounced();
