@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>VexoLab - نتيجة الثانوية العامة</title>
-    <meta name="description" content="استعلام سريع عن نتيجة الثانوية العامة المصرية باستخدام رقم الجلوس. نظام حديث وموثوق.">
-    <meta name="keywords" content="ثانوية عامة, نتيجة, استعلام, رقم الجلوس, مصر, 2025">
+    <meta name="description" content="استعلام سريع عن نتيجة الثانوية العامة المصرية باستخدام رقم الجلوس أو الاسم. نظام حديث وموثوق.">
+    <meta name="keywords" content="ثانوية عامة, نتيجة, استعلام, رقم الجلوس, اسم, مصر, 2025">
     <meta name="theme-color" content="#0b1d2e">
     
     <!-- Open Graph -->
@@ -144,9 +144,48 @@
             letter-spacing: 1px;
         }
 
+        /* ----- Search Mode Toggle ----- */
+        .search-mode-toggle {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.2rem;
+            background: rgba(0, 10, 20, 0.5);
+            border-radius: 60px;
+            padding: 0.4rem;
+            border: 1px solid rgba(0, 150, 255, 0.15);
+            backdrop-filter: blur(4px);
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 0.7rem 1.2rem;
+            border: none;
+            border-radius: 40px;
+            background: transparent;
+            color: var(--text-soft);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #003366, #001a33);
+            color: var(--text-main);
+            box-shadow: 0 4px 15px rgba(0, 100, 255, 0.3);
+            border: 1px solid rgba(0, 150, 255, 0.2);
+        }
+
+        .mode-btn:hover:not(.active) {
+            color: var(--text-main);
+            background: rgba(0, 50, 100, 0.3);
+        }
+
         /* ----- Search Box ----- */
         .search-box {
-            margin: 2.2rem 0 1.8rem;
+            margin: 1.8rem 0 1.8rem;
             display: flex;
             flex-direction: column;
             gap: 1.2rem;
@@ -373,6 +412,45 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* Duplicate Results List */
+        .duplicate-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+
+        .duplicate-item {
+            background: rgba(0, 20, 40, 0.5);
+            border-radius: 16px;
+            padding: 1rem 1.5rem;
+            border: 1px solid rgba(0, 150, 255, 0.15);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--text-main);
+        }
+
+        .duplicate-item:hover {
+            background: rgba(0, 50, 100, 0.4);
+            border-color: var(--accent);
+            transform: translateX(-5px);
+            box-shadow: 0 4px 20px rgba(0, 100, 255, 0.2);
+        }
+
+        .duplicate-item .seat-number {
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .duplicate-item .hint {
+            color: var(--text-soft);
+            font-size: 0.9rem;
+            margin-top: 0.2rem;
+        }
+
         /* ----- Footer ----- */
         .footer {
             margin-top: 2.5rem;
@@ -393,7 +471,8 @@
 
         /* Focus-visible */
         .input-group input:focus-visible,
-        .btn-primary:focus-visible {
+        .btn-primary:focus-visible,
+        .mode-btn:focus-visible {
             outline: 3px solid var(--primary-light);
             outline-offset: 3px;
         }
@@ -408,6 +487,7 @@
             .btn-primary { font-size: 1.1rem; padding: 1rem 1.5rem; }
             .result-card .row { font-size: 1rem; flex-wrap: wrap; gap: 0.2rem; }
             .student-name { font-size: 1.4rem; }
+            .mode-btn { font-size: 0.85rem; padding: 0.6rem 0.8rem; }
         }
 
         @media (min-width: 768px) {
@@ -571,10 +651,16 @@
             <p>نتيجة الثانوية العامة - استعلام فوري</p>
         </header>
 
+        <!-- Search Mode Toggle -->
+        <div class="search-mode-toggle" role="radiogroup" aria-label="طريقة البحث">
+            <button class="mode-btn active" data-mode="seat" role="radio" aria-checked="true" id="modeSeat">رقم الجلوس</button>
+            <button class="mode-btn" data-mode="name" role="radio" aria-checked="false" id="modeName">الاسم</button>
+        </div>
+
         <!-- Search Section -->
         <section class="search-box" role="search" aria-label="استعلام نتيجة">
             <div class="input-group">
-                <input type="number" id="seatInput" placeholder="أدخل رقم الجلوس" aria-label="رقم الجلوس" inputmode="numeric" autofocus>
+                <input type="text" id="searchInput" placeholder="أدخل رقم الجلوس" aria-label="رقم الجلوس" inputmode="numeric" autofocus>
             </div>
             <button class="btn-primary" id="searchBtn" aria-label="عرض النتيجة">
                 عرض النتيجة
@@ -608,25 +694,26 @@
                 7: "غائب"
             });
 
-            // المجموع الكلي للدرجات (ثابت)
             const TOTAL_SCORE = 320;
 
             // ---------- DOM refs ----------
-            const seatInput = document.getElementById('seatInput');
+            const searchInput = document.getElementById('searchInput');
             const searchBtn = document.getElementById('searchBtn');
             const resultContainer = document.getElementById('resultContainer');
+            const modeSeat = document.getElementById('modeSeat');
+            const modeName = document.getElementById('modeName');
             
             // Popup refs
             const popupOverlay = document.getElementById('popupOverlay');
             const followBtn = document.getElementById('followBtn');
             const closePopupBtn = document.getElementById('closePopupBtn');
 
-            // ---------- CACHE ----------
+            // ---------- STATE ----------
+            let currentMode = 'seat'; // 'seat' or 'name'
             const cache = new Map();
-
-            // ---------- POPUP LOGIC ----------
             let isUnlocked = false;
 
+            // ---------- POPUP LOGIC ----------
             if (sessionStorage.getItem('vexolab_unlocked') === 'true') {
                 isUnlocked = true;
             } else {
@@ -644,10 +731,6 @@
 
             closePopupBtn.addEventListener('click', function() {
                 popupOverlay.classList.remove('active');
-            });
-
-            popupOverlay.addEventListener('click', function(e) {
-                if (e.target === popupOverlay) { /* Do nothing */ }
             });
 
             // ---------- RIPPLE EFFECT ----------
@@ -668,6 +751,310 @@
 
             searchBtn.addEventListener('click', addRipple);
 
+            // ---------- MODE TOGGLE ----------
+            function setMode(mode) {
+                currentMode = mode;
+                const isSeat = mode === 'seat';
+                
+                modeSeat.classList.toggle('active', isSeat);
+                modeSeat.setAttribute('aria-checked', isSeat);
+                modeName.classList.toggle('active', !isSeat);
+                modeName.setAttribute('aria-checked', !isSeat);
+                
+                searchInput.value = '';
+                searchInput.placeholder = isSeat ? 'أدخل رقم الجلوس' : 'أدخل الاسم (ثلاثي أو رباعي)';
+                searchInput.type = isSeat ? 'text' : 'text';
+                searchInput.inputMode = isSeat ? 'numeric' : 'text';
+                
+                // Clear result when switching modes
+                resultContainer.innerHTML = '';
+            }
+
+            modeSeat.addEventListener('click', function() {
+                if (currentMode !== 'seat') {
+                    setMode('seat');
+                    searchInput.focus();
+                }
+            });
+
+            modeName.addEventListener('click', function() {
+                if (currentMode !== 'name') {
+                    setMode('name');
+                    searchInput.focus();
+                }
+            });
+
+            // ---------- NAME NORMALIZATION FUNCTIONS ----------
+            function normalizeArabicName(name) {
+                // Normalize Arabic characters
+                const map = {
+                    'أ': 'ا',
+                    'إ': 'ا',
+                    'آ': 'ا',
+                    'ى': 'ي',
+                    'ة': 'ه'
+                };
+                
+                // Replace characters
+                let normalized = '';
+                for (let char of name) {
+                    normalized += map[char] || char;
+                }
+                
+                // Remove extra spaces
+                normalized = normalized.replace(/\s+/g, ' ').trim();
+                
+                return normalized;
+            }
+
+            function generateNameKey(name) {
+                // Normalize first
+                const normalized = normalizeArabicName(name);
+                
+                // Split into words
+                const words = normalized.split(/\s+/).filter(w => w.length > 0);
+                
+                // Take first 3 characters from each word
+                const parts = words.map(word => {
+                    return word.length >= 3 ? word.substring(0, 3) : word;
+                });
+                
+                // Join all parts
+                return parts.join('');
+            }
+
+            // ---------- SEAT SEARCH (original functionality) ----------
+            async function searchBySeat(seatNumber) {
+                if (!isUnlocked) {
+                    popupOverlay.classList.add('active');
+                    renderError('يجب متابعة الحساب أولاً للاستعلام عن النتيجة');
+                    return;
+                }
+
+                const seat = String(seatNumber).trim();
+                if (!seat || seat.length === 0) {
+                    renderError('الرجاء إدخال رقم الجلوس');
+                    return;
+                }
+
+                if (!/^\d+$/.test(seat)) {
+                    renderError('رقم الجلوس يجب أن يحتوي على أرقام فقط');
+                    return;
+                }
+
+                const prefix = seat.substring(0, 3);
+                if (prefix.length < 3) {
+                    renderError('رقم الجلوس يجب أن يكون مكوناً من 3 أرقام على الأقل');
+                    return;
+                }
+
+                showSkeleton();
+
+                try {
+                    // Determine folder: data_1, data_2, etc. based on prefix
+                    const folderNum = Math.ceil(parseInt(prefix) / 50);
+                    const folderName = `data_${folderNum}`;
+                    
+                    let data = null;
+                    const cacheKey = `seat_${folderName}`;
+                    
+                    if (cache.has(cacheKey)) {
+                        data = cache.get(cacheKey);
+                    } else {
+                        const response = await fetch(`output/data/${folderName}/${prefix}.json`);
+                        
+                        if (response.status === 404) {
+                            renderNotAnnounced();
+                            return;
+                        }
+
+                        if (!response.ok) {
+                            throw new Error(`خطأ في التحميل (${response.status})`);
+                        }
+
+                        data = await response.json();
+                        if (!data || typeof data !== 'object' || !data.students) {
+                            throw new Error('بيانات غير صالحة');
+                        }
+                        cache.set(cacheKey, data);
+                    }
+
+                    const student = data.students[seat];
+                    if (!student) {
+                        renderNotFound();
+                        return;
+                    }
+
+                    renderStudent(seat, student);
+
+                } catch (err) {
+                    console.warn('Seat search error:', err);
+                    let msg = 'حدث خطأ أثناء البحث';
+                    if (err.message.includes('بيانات غير صالحة')) {
+                        msg = 'صيغة البيانات غير صالحة';
+                    } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+                        msg = 'فشل الاتصال، تحقق من اتصالك بالإنترنت';
+                    } else {
+                        msg = err.message || 'خطأ غير معروف';
+                    }
+                    renderError(msg);
+                }
+            }
+
+            // ---------- NAME SEARCH (new functionality) ----------
+            async function searchByName(name) {
+                if (!isUnlocked) {
+                    popupOverlay.classList.add('active');
+                    renderError('يجب متابعة الحساب أولاً للاستعلام عن النتيجة');
+                    return;
+                }
+
+                const fullName = String(name).trim();
+                if (!fullName || fullName.length === 0) {
+                    renderError('الرجاء إدخال الاسم');
+                    return;
+                }
+
+                // Generate Name Key
+                const nameKey = generateNameKey(fullName);
+                if (nameKey.length < 2) {
+                    renderError('الاسم قصير جداً، يرجى إدخال اسم كامل');
+                    return;
+                }
+
+                // Take first 2 characters for filename
+                const filePrefix = nameKey.substring(0, 2);
+                
+                // Determine folder: names_1, names_2, etc.
+                // Use a hash or simple mapping based on the file name
+                // We'll use a simple approach: get the Unicode code point sum modulo something
+                let hash = 0;
+                for (let i = 0; i < filePrefix.length; i++) {
+                    hash = (hash * 31 + filePrefix.charCodeAt(i)) & 0xFFFFFFFF;
+                }
+                const folderNum = (Math.abs(hash) % 100) + 1; // Spread across folders
+                const folderName = `names_${folderNum}`;
+
+                showSkeleton();
+
+                try {
+                    let data = null;
+                    const cacheKey = `name_${folderName}_${filePrefix}`;
+                    
+                    if (cache.has(cacheKey)) {
+                        data = cache.get(cacheKey);
+                    } else {
+                        // Try to find the file in the correct folder
+                        const response = await fetch(`output/names/${folderName}/${filePrefix}.json`);
+                        
+                        if (response.status === 404) {
+                            renderNotFound();
+                            return;
+                        }
+
+                        if (!response.ok) {
+                            throw new Error(`خطأ في التحميل (${response.status})`);
+                        }
+
+                        data = await response.json();
+                        if (!data || typeof data !== 'object') {
+                            throw new Error('بيانات غير صالحة');
+                        }
+                        cache.set(cacheKey, data);
+                    }
+
+                    // Look for the name key in the data
+                    const seatNumbers = data[nameKey];
+                    if (!seatNumbers || seatNumbers.length === 0) {
+                        renderNotFound();
+                        return;
+                    }
+
+                    if (seatNumbers.length === 1) {
+                        // Single result - fetch student data directly
+                        const seat = seatNumbers[0];
+                        await fetchAndRenderStudent(seat);
+                    } else {
+                        // Multiple results - show list
+                        renderDuplicateList(seatNumbers, fullName);
+                    }
+
+                } catch (err) {
+                    console.warn('Name search error:', err);
+                    let msg = 'حدث خطأ أثناء البحث';
+                    if (err.message.includes('بيانات غير صالحة')) {
+                        msg = 'صيغة البيانات غير صالحة';
+                    } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+                        msg = 'فشل الاتصال، تحقق من اتصالك بالإنترنت';
+                    } else {
+                        msg = err.message || 'خطأ غير معروف';
+                    }
+                    renderError(msg);
+                }
+            }
+
+            // ---------- Fetch and render student by seat (helper for name search) ----------
+            async function fetchAndRenderStudent(seat) {
+                const seatStr = String(seat).trim();
+                if (!/^\d+$/.test(seatStr)) {
+                    renderError('رقم الجلوس غير صالح');
+                    return;
+                }
+
+                const prefix = seatStr.substring(0, 3);
+                if (prefix.length < 3) {
+                    renderError('رقم الجلوس غير صالح');
+                    return;
+                }
+
+                showSkeleton();
+
+                try {
+                    const folderNum = Math.ceil(parseInt(prefix) / 50);
+                    const folderName = `data_${folderNum}`;
+                    
+                    let data = null;
+                    const cacheKey = `seat_${folderName}`;
+                    
+                    if (cache.has(cacheKey)) {
+                        data = cache.get(cacheKey);
+                    } else {
+                        const response = await fetch(`output/data/${folderName}/${prefix}.json`);
+                        
+                        if (response.status === 404) {
+                            renderNotAnnounced();
+                            return;
+                        }
+
+                        if (!response.ok) {
+                            throw new Error(`خطأ في التحميل (${response.status})`);
+                        }
+
+                        data = await response.json();
+                        if (!data || typeof data !== 'object' || !data.students) {
+                            throw new Error('بيانات غير صالحة');
+                        }
+                        cache.set(cacheKey, data);
+                    }
+
+                    const student = data.students[seatStr];
+                    if (!student) {
+                        renderNotFound();
+                        return;
+                    }
+
+                    renderStudent(seatStr, student);
+
+                } catch (err) {
+                    console.warn('Fetch student error:', err);
+                    let msg = 'حدث خطأ أثناء تحميل بيانات الطالب';
+                    if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+                        msg = 'فشل الاتصال، تحقق من اتصالك بالإنترنت';
+                    }
+                    renderError(msg);
+                }
+            }
+
             // ---------- RENDER FUNCTIONS ----------
             function showSkeleton() {
                 resultContainer.innerHTML = `
@@ -675,14 +1062,6 @@
                         <div class="skeleton-line long"></div>
                         <div class="skeleton-line short"></div>
                         <div class="skeleton-line long"></div>
-                    </div>
-                `;
-            }
-
-            function showSpinner() {
-                resultContainer.innerHTML = `
-                    <div class="spinner-center fade-in">
-                        <div class="spinner" role="status" aria-label="جاري التحميل"></div>
                     </div>
                 `;
             }
@@ -696,10 +1075,8 @@
                     badgeClass += ' fail';
                 }
 
-                // حساب النسبة المئوية
                 const percentage = ((studentData.t / TOTAL_SCORE) * 100).toFixed(2);
 
-                // التحقق من وجود rank وعرضه
                 let rankHtml = '';
                 if (studentData.rank !== undefined && studentData.rank !== null) {
                     rankHtml = `
@@ -729,10 +1106,37 @@
                 `;
             }
 
+            function renderDuplicateList(seatNumbers, name) {
+                let listHtml = seatNumbers.map(seat => `
+                    <div class="duplicate-item" data-seat="${seat}">
+                        <div class="seat-number">رقم الجلوس: ${seat}</div>
+                        <div class="hint">اضغط لعرض النتيجة</div>
+                    </div>
+                `).join('');
+
+                resultContainer.innerHTML = `
+                    <div class="result-card fade-in">
+                        <div class="student-name" style="font-size:1.3rem; text-align:center;">تم العثور على أكثر من طالب بهذا الاسم</div>
+                        <div style="text-align:center; color:var(--text-soft); margin-bottom:1rem;">"${name}"</div>
+                        <div class="duplicate-list">
+                            ${listHtml}
+                        </div>
+                    </div>
+                `;
+
+                // Add click listeners to duplicate items
+                document.querySelectorAll('.duplicate-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const seat = this.dataset.seat;
+                        fetchAndRenderStudent(seat);
+                    });
+                });
+            }
+
             function renderNotFound() {
                 resultContainer.innerHTML = `
                     <div class="error-card fade-in">
-                        <span>❌</span> لم يتم العثور على رقم الجلوس
+                        <span>❌</span> لم يتم العثور على نتائج
                     </div>
                 `;
             }
@@ -745,7 +1149,7 @@
                 `;
             }
 
-            function renderNetworkError(msg = 'حدث خطأ أثناء تحميل البيانات') {
+            function renderError(msg = 'حدث خطأ أثناء تحميل البيانات') {
                 resultContainer.innerHTML = `
                     <div class="error-card fade-in">
                         <span>⚠️</span> ${msg}
@@ -753,97 +1157,39 @@
                 `;
             }
 
-            // ---------- CORE SEARCH LOGIC (async) ----------
-            async function performSearch(seatNumber) {
-                if (!isUnlocked) {
-                    popupOverlay.classList.add('active');
-                    renderNetworkError('يجب متابعة الحساب أولاً للاستعلام عن النتيجة');
+            // ---------- MAIN SEARCH HANDLER ----------
+            function performSearch() {
+                const input = searchInput.value.trim();
+                if (!input) {
+                    renderError('الرجاء إدخال قيمة للبحث');
                     return;
                 }
 
-                const seat = String(seatNumber).trim();
-                if (!seat || seat.length === 0) {
-                    renderNetworkError('الرجاء إدخال رقم الجلوس');
-                    return;
-                }
-
-                if (!/^\d+$/.test(seat)) {
-                    renderNetworkError('رقم الجلوس يجب أن يحتوي على أرقام فقط');
-                    return;
-                }
-
-                const prefix = seat.substring(0, 3);
-                if (prefix.length < 3) {
-                    renderNetworkError('رقم الجلوس يجب أن يكون مكوناً من 3 أرقام على الأقل');
-                    return;
-                }
-
-                showSkeleton();
-
-                try {
-                    let data = null;
-                    if (cache.has(prefix)) {
-                        data = cache.get(prefix);
-                    } else {
-                        const response = await fetch(`data/${prefix}.json`);
-                        
-                        if (response.status === 404) {
-                            renderNotAnnounced();
-                            return;
-                        }
-
-                        if (!response.ok) {
-                            throw new Error(`خطأ في التحميل (${response.status})`);
-                        }
-
-                        data = await response.json();
-                        if (!data || typeof data !== 'object' || !data.students) {
-                            throw new Error('بيانات غير صالحة');
-                        }
-                        cache.set(prefix, data);
-                    }
-
-                    const student = data.students[seat];
-                    if (!student) {
-                        renderNotFound();
-                        return;
-                    }
-
-                    renderStudent(seat, student);
-
-                } catch (err) {
-                    console.warn('Search error:', err);
-                    let msg = 'حدث خطأ أثناء البحث';
-                    if (err.message.includes('بيانات غير صالحة')) {
-                        msg = 'صيغة البيانات غير صالحة';
-                    } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-                        msg = 'فشل الاتصال، تحقق من اتصالك بالإنترنت';
-                    } else {
-                        msg = err.message || 'خطأ غير معروف';
-                    }
-                    renderNetworkError(msg);
+                if (currentMode === 'seat') {
+                    searchBySeat(input);
+                } else {
+                    searchByName(input);
                 }
             }
 
             // ---------- EVENT HANDLERS ----------
             searchBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                const val = seatInput.value;
-                performSearch(val);
+                performSearch();
             });
 
-            seatInput.addEventListener('keydown', function(e) {
+            searchInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    const val = seatInput.value;
-                    performSearch(val);
+                    performSearch();
                 }
             });
 
-            seatInput.setAttribute('aria-describedby', 'searchBtn');
-            seatInput.focus();
+            // ---------- INITIAL SETUP ----------
+            setMode('seat');
+            searchInput.focus();
 
-            console.log('✅ VexoLab System Ready (Dark Tech Style)');
+            console.log('✅ VexoLab System Ready (Dark Tech Style - with Name Search)');
         })();
     </script>
 </body>
