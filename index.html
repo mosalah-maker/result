@@ -599,6 +599,9 @@
                 7: "غائب"
             });
 
+            // المجموع الكلي للدرجات (ثابت)
+            const TOTAL_SCORE = 320;
+
             // ---------- DOM refs ----------
             const seatInput = document.getElementById('seatInput');
             const searchBtn = document.getElementById('searchBtn');
@@ -684,11 +687,15 @@
                     badgeClass += ' fail';
                 }
 
+                // حساب النسبة المئوية
+                const percentage = ((studentData.t / TOTAL_SCORE) * 100).toFixed(2);
+
                 resultContainer.innerHTML = `
                     <div class="result-card fade-in">
                         <div class="student-name">${studentData.n}</div>
                         <div class="row"><span class="result-label">رقم الجلوس</span><span class="result-value">${seat}</span></div>
-                        <div class="row"><span class="result-label">المجموع</span><span class="result-value">${studentData.t}</span></div>
+                        <div class="row"><span class="result-label">المجموع</span><span class="result-value">${studentData.t} من ${TOTAL_SCORE}</span></div>
+                        <div class="row"><span class="result-label">النسبة المئوية</span><span class="result-value">${percentage}%</span></div>
                         <div class="row"><span class="result-label">الحالة</span><span class="result-value"><span class="${badgeClass}">${statusText}</span></span></div>
                     </div>
                 `;
