@@ -650,7 +650,7 @@
 
             // ---------- CONSTANTS ----------
             const TOTAL_SCORE = 320;
-            const MAX_FOLDERS_TO_CHECK = 20; // Maximum number of folders to check
+            const MAX_FOLDERS_TO_CHECK = 20;
 
             // ---------- DOM refs ----------
             const searchInput = document.getElementById('searchInput');
@@ -782,17 +782,15 @@
                     try {
                         const response = await fetch(filePath, { method: 'HEAD' });
                         if (response.ok) {
-                            // Found the file
                             folderCache.set(prefix, filePath);
                             return filePath;
                         }
                     } catch (err) {
-                        // Continue to next folder
                         continue;
                     }
                 }
                 
-                // If not found, try one more time with a GET request (in case HEAD is blocked)
+                // If not found, try with GET (in case HEAD is blocked)
                 for (let i = 1; i <= MAX_FOLDERS_TO_CHECK; i++) {
                     const folderName = `data_${i}`;
                     const filePath = `data/${folderName}/${prefix}.json`;
@@ -800,7 +798,6 @@
                     try {
                         const response = await fetch(filePath);
                         if (response.ok) {
-                            // Found the file
                             folderCache.set(prefix, filePath);
                             return filePath;
                         }
@@ -809,8 +806,51 @@
                     }
                 }
                 
-                // File not found in any folder
                 folderCache.set(prefix, null);
+                return null;
+            }
+
+            // ---------- FIND NAME FILE BY TRYING FOLDERS ----------
+            async function findNameFile(filePrefix) {
+                // Check cache first
+                const cacheKey = `name_${filePrefix}`;
+                if (folderCache.has(cacheKey)) {
+                    return folderCache.get(cacheKey);
+                }
+
+                // Try folders from 1 to MAX_FOLDERS_TO_CHECK
+                for (let i = 1; i <= MAX_FOLDERS_TO_CHECK; i++) {
+                    const folderName = `names_${i}`;
+                    const filePath = `names/${folderName}/${filePrefix}.json`;
+                    
+                    try {
+                        const response = await fetch(filePath, { method: 'HEAD' });
+                        if (response.ok) {
+                            folderCache.set(cacheKey, filePath);
+                            return filePath;
+                        }
+                    } catch (err) {
+                        continue;
+                    }
+                }
+                
+                // If not found, try with GET (in case HEAD is blocked)
+                for (let i = 1; i <= MAX_FOLDERS_TO_CHECK; i++) {
+                    const folderName = `names_${i}`;
+                    const filePath = `names/${folderName}/${filePrefix}.json`;
+                    
+                    try {
+                        const response = await fetch(filePath);
+                        if (response.ok) {
+                            folderCache.set(cacheKey, filePath);
+                            return filePath;
+                        }
+                    } catch (err) {
+                        continue;
+                    }
+                }
+                
+                folderCache.set(cacheKey, null);
                 return null;
             }
 
@@ -819,13 +859,11 @@
                 const seatStr = String(seat).trim();
                 const prefix = seatStr.substring(0, 3);
                 
-                // Check cache first
                 const cacheKey = `student_${prefix}`;
                 if (cache.has(cacheKey)) {
                     return cache.get(cacheKey);
                 }
 
-                // Find the file path
                 const filePath = await findStudentFile(prefix);
                 if (!filePath) {
                     cache.set(cacheKey, null);
@@ -851,7 +889,7 @@
                 }
             }
 
-            // ---------- SEAT SEARCH (Dynamic folder discovery) ----------
+            // ---------- SEAT SEARCH ----------
             async function searchBySeat(seatNumber) {
                 if (!isUnlocked) {
                     popupOverlay.classList.add('active');
@@ -908,7 +946,7 @@
                 }
             }
 
-            // ---------- NAME SEARCH (Unchanged) ----------
+            // ---------- NAME SEARCH (Dynamic folder discovery) ----------
             async function searchByName(name) {
                 if (!isUnlocked) {
                     popupOverlay.classList.add('active');
@@ -929,31 +967,26 @@
                 }
 
                 const filePrefix = nameKey.substring(0, 2);
-                
-                let hash = 0;
-                for (let i = 0; i < filePrefix.length; i++) {
-                    hash = (hash * 31 + filePrefix.charCodeAt(i)) & 0xFFFFFFFF;
-                }
-                const folderNum = (Math.abs(hash) % 100) + 1;
-                const folderName = `names_${folderNum}`;
-                const filePath = `names/${folderName}/${filePrefix}.json`;
 
                 showSkeleton();
 
                 try {
+                    // Find the file path dynamically
+                    const filePath = await findNameFile(filePrefix);
+                    
+                    if (!filePath) {
+                        renderNotFound();
+                        return;
+                    }
+
                     let data = null;
-                    const cacheKey = `name_${folderName}_${filePrefix}`;
+                    const cacheKey = `name_data_${filePrefix}`;
                     
                     if (cache.has(cacheKey)) {
                         data = cache.get(cacheKey);
                     } else {
                         const response = await fetch(filePath);
                         
-                        if (response.status === 404) {
-                            renderNotFound();
-                            return;
-                        }
-
                         if (!response.ok) {
                             throw new Error(`خطأ في التحميل (${response.status})`);
                         }
@@ -992,7 +1025,7 @@
                 }
             }
 
-            // ---------- FETCH AND RENDER STUDENT (Dynamic folder discovery) ----------
+            // ---------- FETCH AND RENDER STUDENT ----------
             async function fetchAndRenderStudent(seat) {
                 const seatStr = String(seat).trim();
                 if (!/^\d+$/.test(seatStr)) {
