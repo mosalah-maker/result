@@ -666,6 +666,7 @@
             let currentMode = 'seat';
             const cache = new Map();
             let isUnlocked = false;
+            let dataFoldersCache = null; // Cache for available data folders
 
             // ---------- POPUP LOGIC ----------
             if (sessionStorage.getItem('vexolab_unlocked') === 'true') {
@@ -765,7 +766,108 @@
                 return parts.join('');
             }
 
-            // ---------- SEAT SEARCH (Direct file path calculation) ----------
+            // ---------- GET AVAILABLE DATA FOLDERS ----------
+            async function getAvailableDataFolders() {
+                if (dataFoldersCache !== null) {
+                    return dataFoldersCache;
+                }
+
+                try {
+                    // Try to fetch a list of folders by attempting common patterns
+                    // We'll try to detect folders by attempting to fetch a known file
+                    const folders = [];
+                    let folderIndex = 1;
+                    let found = true;
+                    
+                    while (found) {
+                        const testPath = `data/data_${folderIndex}/001.json`;
+                        try {
+                            const response = await fetch(testPath, { method: 'HEAD' });
+                            if (response.ok) {
+                                folders.push(`data_${folderIndex}`);
+                                folderIndex++;
+                            } else {
+                                found = false;
+                            }
+                        } catch (err) {
+                            found = false;
+                        }
+                    }
+                    
+                    // If no folders found, try a different approach - check for data_1
+                    if (folders.length === 0) {
+                        // Assume at least data_1 exists
+                        folders.push('data_1');
+                    }
+                    
+                    dataFoldersCache = folders;
+                    return folders;
+                } catch (err) {
+                    console.warn('Error detecting data folders:', err);
+                    // Fallback: assume data_1 exists
+                    dataFoldersCache = ['data_1'];
+                    return dataFoldersCache;
+                }
+            }
+
+            // ---------- FIND STUDENT FILE IN AVAILABLE FOLDERS ----------
+            async function findStudentFile(prefix) {
+                const folders = await getAvailableDataFolders();
+                
+                // Try each folder
+                for (const folder of folders) {
+                    const filePath = `data/${folder}/${prefix}.json`;
+                    try {
+                        const response = await fetch(filePath);
+                        if (response.ok) {
+                            return filePath;
+                        }
+                    } catch (err) {
+                        // Continue to next folder
+                        continue;
+                    }
+                }
+                
+                return null; // File not found in any folder
+            }
+
+            // ---------- FETCH STUDENT DATA WITH FOLDER DISCOVERY ----------
+            async function fetchStudentData(seat) {
+                const seatStr = String(seat).trim();
+                const prefix = seatStr.substring(0, 3);
+                
+                // Check cache first
+                const cacheKey = `seat_${prefix}`;
+                if (cache.has(cacheKey)) {
+                    return cache.get(cacheKey);
+                }
+
+                // Find the file path
+                const filePath = await findStudentFile(prefix);
+                if (!filePath) {
+                    return null;
+                }
+
+                try {
+                    const response = await fetch(filePath);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    const data = await response.json();
+                    
+                    if (!data || typeof data !== 'object' || !data.students) {
+                        throw new Error('بيانات غير صالحة');
+                    }
+                    
+                    cache.set(cacheKey, data);
+                    return data;
+                } catch (err) {
+                    console.warn('Failed to fetch student data:', err);
+                    throw new Error('فشل تحميل بيانات الطالب');
+                }
+            }
+
+            // ---------- SEAT SEARCH (Dynamic folder discovery) ----------
             async function searchBySeat(seatNumber) {
                 if (!isUnlocked) {
                     popupOverlay.classList.add('active');
@@ -784,43 +886,20 @@
                     return;
                 }
 
-                // Get first 3 digits as prefix
                 const prefix = seat.substring(0, 3);
                 if (prefix.length < 3) {
                     renderError('رقم الجلوس يجب أن يكون مكوناً من 3 أرقام على الأقل');
                     return;
                 }
 
-                // Calculate folder number: Math.ceil(parseInt(prefix) / 50)
-                const folderNum = Math.ceil(parseInt(prefix) / 50);
-                const folderName = `data_${folderNum}`;
-                const filePath = `data/${folderName}/${prefix}.json`;
-
                 showSkeleton();
 
                 try {
-                    let data = null;
-                    const cacheKey = `seat_${folderName}_${prefix}`;
+                    const data = await fetchStudentData(seat);
                     
-                    if (cache.has(cacheKey)) {
-                        data = cache.get(cacheKey);
-                    } else {
-                        const response = await fetch(filePath);
-                        
-                        if (response.status === 404) {
-                            renderNotAnnounced();
-                            return;
-                        }
-
-                        if (!response.ok) {
-                            throw new Error(`خطأ في التحميل (${response.status})`);
-                        }
-
-                        data = await response.json();
-                        if (!data || typeof data !== 'object' || !data.students) {
-                            throw new Error('بيانات غير صالحة');
-                        }
-                        cache.set(cacheKey, data);
+                    if (!data) {
+                        renderNotFound();
+                        return;
                     }
 
                     const student = data.students[seat];
@@ -845,7 +924,7 @@
                 }
             }
 
-            // ---------- NAME SEARCH (Direct file path calculation) ----------
+            // ---------- NAME SEARCH (Unchanged) ----------
             async function searchByName(name) {
                 if (!isUnlocked) {
                     popupOverlay.classList.add('active');
@@ -859,17 +938,14 @@
                     return;
                 }
 
-                // Generate Name Key
                 const nameKey = generateNameKey(fullName);
                 if (nameKey.length < 2) {
                     renderError('الاسم قصير جداً، يرجى إدخال اسم كامل');
                     return;
                 }
 
-                // Take first 2 characters for filename
                 const filePrefix = nameKey.substring(0, 2);
                 
-                // Determine folder using same hash algorithm
                 let hash = 0;
                 for (let i = 0; i < filePrefix.length; i++) {
                     hash = (hash * 31 + filePrefix.charCodeAt(i)) & 0xFFFFFFFF;
@@ -905,7 +981,6 @@
                         cache.set(cacheKey, data);
                     }
 
-                    // Look for the name key in the data
                     const seatNumbers = data[nameKey];
                     if (!seatNumbers || seatNumbers.length === 0) {
                         renderNotFound();
@@ -933,7 +1008,7 @@
                 }
             }
 
-            // ---------- FETCH AND RENDER STUDENT (Direct file path calculation) ----------
+            // ---------- FETCH AND RENDER STUDENT (Dynamic folder discovery) ----------
             async function fetchAndRenderStudent(seat) {
                 const seatStr = String(seat).trim();
                 if (!/^\d+$/.test(seatStr)) {
@@ -941,41 +1016,14 @@
                     return;
                 }
 
-                const prefix = seatStr.substring(0, 3);
-                if (prefix.length < 3) {
-                    renderError('رقم الجلوس غير صالح');
-                    return;
-                }
-
-                const folderNum = Math.ceil(parseInt(prefix) / 50);
-                const folderName = `data_${folderNum}`;
-                const filePath = `data/${folderName}/${prefix}.json`;
-
                 showSkeleton();
 
                 try {
-                    let data = null;
-                    const cacheKey = `seat_${folderName}_${prefix}`;
+                    const data = await fetchStudentData(seatStr);
                     
-                    if (cache.has(cacheKey)) {
-                        data = cache.get(cacheKey);
-                    } else {
-                        const response = await fetch(filePath);
-                        
-                        if (response.status === 404) {
-                            renderNotAnnounced();
-                            return;
-                        }
-
-                        if (!response.ok) {
-                            throw new Error(`خطأ في التحميل (${response.status})`);
-                        }
-
-                        data = await response.json();
-                        if (!data || typeof data !== 'object' || !data.students) {
-                            throw new Error('بيانات غير صالحة');
-                        }
-                        cache.set(cacheKey, data);
+                    if (!data) {
+                        renderNotFound();
+                        return;
                     }
 
                     const student = data.students[seatStr];
@@ -1009,23 +1057,15 @@
                 `;
             }
 
-            // Render student with text status directly from JSON
             function renderStudent(seat, studentData) {
-                // Read status directly from JSON - no conversion
                 const statusText = studentData.s || "غير معروف";
                 
-                // Determine badge class based on status text
                 let badgeClass = 'status-badge';
-                
-                // Check if status contains success keywords
                 if (statusText.includes('ناجح')) {
                     badgeClass += ' success';
-                } 
-                // Check if status contains fail keywords
-                else if (statusText.includes('راسب')) {
+                } else if (statusText.includes('راسب')) {
                     badgeClass += ' fail';
                 }
-                // Other statuses use default color
 
                 const percentage = ((studentData.t / TOTAL_SCORE) * 100).toFixed(2);
 
@@ -1140,7 +1180,7 @@
             setMode('seat');
             searchInput.focus();
 
-            console.log('✅ VexoLab System Ready (Direct file access - no index.json)');
+            console.log('✅ VexoLab System Ready (Dynamic folder discovery - no index.json)');
         })();
     </script>
 </body>
