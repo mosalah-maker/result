@@ -649,8 +649,6 @@
             "use strict";
 
             // ---------- CONSTANTS ----------
-            // STATUS constant removed - now reading directly from JSON
-
             const TOTAL_SCORE = 320;
 
             // ---------- DOM refs ----------
@@ -668,7 +666,6 @@
             let currentMode = 'seat';
             const cache = new Map();
             let isUnlocked = false;
-            let indexData = null;
 
             // ---------- POPUP LOGIC ----------
             if (sessionStorage.getItem('vexolab_unlocked') === 'true') {
@@ -768,64 +765,7 @@
                 return parts.join('');
             }
 
-            // ---------- LOAD INDEX.JSON ----------
-            async function loadIndex() {
-                if (indexData !== null) {
-                    return indexData;
-                }
-
-                try {
-                    const response = await fetch('data/index.json');
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                    indexData = await response.json();
-                    return indexData;
-                } catch (err) {
-                    console.warn('Failed to load index.json:', err);
-                    throw new Error('فشل تحميل فهرس البيانات');
-                }
-            }
-
-            // ---------- FETCH STUDENT DATA USING INDEX ----------
-            async function fetchStudentData(seat) {
-                const seatStr = String(seat).trim();
-                
-                const index = await loadIndex();
-                
-                const entry = index[seatStr];
-                if (!entry) {
-                    return null;
-                }
-
-                const { folder, file } = entry;
-                const filePath = `data/${folder}/${file}`;
-
-                const cacheKey = `student_${folder}_${file}`;
-                if (cache.has(cacheKey)) {
-                    return cache.get(cacheKey);
-                }
-
-                try {
-                    const response = await fetch(filePath);
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                    const data = await response.json();
-                    
-                    if (!data || typeof data !== 'object' || !data.students) {
-                        throw new Error('بيانات غير صالحة');
-                    }
-                    
-                    cache.set(cacheKey, data);
-                    return data;
-                } catch (err) {
-                    console.warn('Failed to fetch student data:', err);
-                    throw new Error('فشل تحميل بيانات الطالب');
-                }
-            }
-
-            // ---------- SEAT SEARCH ----------
+            // ---------- SEAT SEARCH (Direct file path calculation) ----------
             async function searchBySeat(seatNumber) {
                 if (!isUnlocked) {
                     popupOverlay.classList.add('active');
@@ -844,14 +784,43 @@
                     return;
                 }
 
+                // Get first 3 digits as prefix
+                const prefix = seat.substring(0, 3);
+                if (prefix.length < 3) {
+                    renderError('رقم الجلوس يجب أن يكون مكوناً من 3 أرقام على الأقل');
+                    return;
+                }
+
+                // Calculate folder number: Math.ceil(parseInt(prefix) / 50)
+                const folderNum = Math.ceil(parseInt(prefix) / 50);
+                const folderName = `data_${folderNum}`;
+                const filePath = `data/${folderName}/${prefix}.json`;
+
                 showSkeleton();
 
                 try {
-                    const data = await fetchStudentData(seat);
+                    let data = null;
+                    const cacheKey = `seat_${folderName}_${prefix}`;
                     
-                    if (!data) {
-                        renderNotFound();
-                        return;
+                    if (cache.has(cacheKey)) {
+                        data = cache.get(cacheKey);
+                    } else {
+                        const response = await fetch(filePath);
+                        
+                        if (response.status === 404) {
+                            renderNotAnnounced();
+                            return;
+                        }
+
+                        if (!response.ok) {
+                            throw new Error(`خطأ في التحميل (${response.status})`);
+                        }
+
+                        data = await response.json();
+                        if (!data || typeof data !== 'object' || !data.students) {
+                            throw new Error('بيانات غير صالحة');
+                        }
+                        cache.set(cacheKey, data);
                     }
 
                     const student = data.students[seat];
@@ -865,9 +834,7 @@
                 } catch (err) {
                     console.warn('Seat search error:', err);
                     let msg = 'حدث خطأ أثناء البحث';
-                    if (err.message.includes('فشل تحميل فهرس البيانات')) {
-                        msg = 'فشل تحميل فهرس البيانات، تأكد من اتصالك بالإنترنت';
-                    } else if (err.message.includes('بيانات غير صالحة')) {
+                    if (err.message.includes('بيانات غير صالحة')) {
                         msg = 'صيغة البيانات غير صالحة';
                     } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
                         msg = 'فشل الاتصال، تحقق من اتصالك بالإنترنت';
@@ -878,7 +845,7 @@
                 }
             }
 
-            // ---------- NAME SEARCH ----------
+            // ---------- NAME SEARCH (Direct file path calculation) ----------
             async function searchByName(name) {
                 if (!isUnlocked) {
                     popupOverlay.classList.add('active');
@@ -892,20 +859,24 @@
                     return;
                 }
 
+                // Generate Name Key
                 const nameKey = generateNameKey(fullName);
                 if (nameKey.length < 2) {
                     renderError('الاسم قصير جداً، يرجى إدخال اسم كامل');
                     return;
                 }
 
+                // Take first 2 characters for filename
                 const filePrefix = nameKey.substring(0, 2);
                 
+                // Determine folder using same hash algorithm
                 let hash = 0;
                 for (let i = 0; i < filePrefix.length; i++) {
                     hash = (hash * 31 + filePrefix.charCodeAt(i)) & 0xFFFFFFFF;
                 }
                 const folderNum = (Math.abs(hash) % 100) + 1;
                 const folderName = `names_${folderNum}`;
+                const filePath = `names/${folderName}/${filePrefix}.json`;
 
                 showSkeleton();
 
@@ -916,7 +887,7 @@
                     if (cache.has(cacheKey)) {
                         data = cache.get(cacheKey);
                     } else {
-                        const response = await fetch(`names/${folderName}/${filePrefix}.json`);
+                        const response = await fetch(filePath);
                         
                         if (response.status === 404) {
                             renderNotFound();
@@ -934,6 +905,7 @@
                         cache.set(cacheKey, data);
                     }
 
+                    // Look for the name key in the data
                     const seatNumbers = data[nameKey];
                     if (!seatNumbers || seatNumbers.length === 0) {
                         renderNotFound();
@@ -961,7 +933,7 @@
                 }
             }
 
-            // ---------- FETCH AND RENDER STUDENT ----------
+            // ---------- FETCH AND RENDER STUDENT (Direct file path calculation) ----------
             async function fetchAndRenderStudent(seat) {
                 const seatStr = String(seat).trim();
                 if (!/^\d+$/.test(seatStr)) {
@@ -969,14 +941,41 @@
                     return;
                 }
 
+                const prefix = seatStr.substring(0, 3);
+                if (prefix.length < 3) {
+                    renderError('رقم الجلوس غير صالح');
+                    return;
+                }
+
+                const folderNum = Math.ceil(parseInt(prefix) / 50);
+                const folderName = `data_${folderNum}`;
+                const filePath = `data/${folderName}/${prefix}.json`;
+
                 showSkeleton();
 
                 try {
-                    const data = await fetchStudentData(seatStr);
+                    let data = null;
+                    const cacheKey = `seat_${folderName}_${prefix}`;
                     
-                    if (!data) {
-                        renderNotFound();
-                        return;
+                    if (cache.has(cacheKey)) {
+                        data = cache.get(cacheKey);
+                    } else {
+                        const response = await fetch(filePath);
+                        
+                        if (response.status === 404) {
+                            renderNotAnnounced();
+                            return;
+                        }
+
+                        if (!response.ok) {
+                            throw new Error(`خطأ في التحميل (${response.status})`);
+                        }
+
+                        data = await response.json();
+                        if (!data || typeof data !== 'object' || !data.students) {
+                            throw new Error('بيانات غير صالحة');
+                        }
+                        cache.set(cacheKey, data);
                     }
 
                     const student = data.students[seatStr];
@@ -990,9 +989,7 @@
                 } catch (err) {
                     console.warn('Fetch student error:', err);
                     let msg = 'حدث خطأ أثناء تحميل بيانات الطالب';
-                    if (err.message.includes('فشل تحميل فهرس البيانات')) {
-                        msg = 'فشل تحميل فهرس البيانات';
-                    } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+                    if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
                         msg = 'فشل الاتصال، تحقق من اتصالك بالإنترنت';
                     } else {
                         msg = err.message || 'خطأ غير معروف';
@@ -1012,7 +1009,7 @@
                 `;
             }
 
-            // ---------- UPDATED RENDER STUDENT ----------
+            // Render student with text status directly from JSON
             function renderStudent(seat, studentData) {
                 // Read status directly from JSON - no conversion
                 const statusText = studentData.s || "غير معروف";
@@ -1143,7 +1140,7 @@
             setMode('seat');
             searchInput.focus();
 
-            console.log('✅ VexoLab System Ready (Using index.json with text status)');
+            console.log('✅ VexoLab System Ready (Direct file access - no index.json)');
         })();
     </script>
 </body>
