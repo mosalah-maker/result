@@ -1,41 +1,1171 @@
-async function findStudentFile(prefix) {
-    // Check cache first
-    if (folderCache.has(prefix)) {
-        return folderCache.get(prefix);
-    }
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>VexoLab - نتيجة الثانوية العامة</title>
+    <meta name="description" content="استعلام سريع عن نتيجة الثانوية العامة المصرية باستخدام رقم الجلوس أو الاسم. نظام حديث وموثوق.">
+    <meta name="keywords" content="ثانوية عامة, نتيجة, استعلام, رقم الجلوس, اسم, مصر, 2025">
+    <meta name="theme-color" content="#0b1d2e">
+    
+    <meta property="og:title" content="VexoLab | نتيجة الثانوية العامة">
+    <meta property="og:description" content="استعلام فوري بنظام تكنولوجي.">
 
-    // Try folders from 1 to MAX_FOLDERS_TO_CHECK
-    for (let i = 1; i <= MAX_FOLDERS_TO_CHECK; i++) {
-        const folderName = `data_${i}`;
-        const filePath = `data/${folderName}/${prefix}.json`;
-        
-        try {
-            const response = await fetch(filePath, { method: 'HEAD' });
-            if (response.ok) {
-                folderCache.set(prefix, filePath);
-                return filePath;
-            }
-        } catch (err) {
-            continue;
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-    }
-    
-    // Fallback: try GET requests if HEAD fails
-    for (let i = 1; i <= MAX_FOLDERS_TO_CHECK; i++) {
-        const folderName = `data_${i}`;
-        const filePath = `data/${folderName}/${prefix}.json`;
-        
-        try {
-            const response = await fetch(filePath);
-            if (response.ok) {
-                folderCache.set(prefix, filePath);
-                return filePath;
-            }
-        } catch (err) {
-            continue;
+
+        :root {
+            --bg-color: #03080e;
+            --bg-gradient: radial-gradient(circle at 50% 0%, #162a42 0%, #03080e 70%);
+            --card-bg: rgba(13, 27, 42, 0.6);
+            --glass-border: rgba(54, 143, 255, 0.2);
+            --neon-glow: rgba(0, 150, 255, 0.4);
+            --neon-text: #00c3ff;
+            --primary-dark: #0b1d2e;
+            --primary-blue: #1a6bbd;
+            --primary-light: #4da6ff;
+            --accent: #00a6ff;
+            --text-main: #e0f0ff;
+            --text-soft: #88b0d6;
+            --shadow-sm: 0 12px 30px rgba(0, 20, 40, 0.5);
+            --shadow-hover: 0 25px 45px rgba(0, 100, 255, 0.2);
+            --radius-card: 28px;
+            --radius-btn: 60px;
+            --transition-smooth: all 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.1);
         }
-    }
-    
-    folderCache.set(prefix, null);
-    return null;
-}
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            color: var(--text-main);
+            margin: 0;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            max-width: 640px;
+            width: 100%;
+            background: var(--card-bg);
+            backdrop-filter: blur(14px) saturate(160%);
+            -webkit-backdrop-filter: blur(14px) saturate(160%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-card);
+            padding: 2.2rem 2rem 2rem;
+            box-shadow: var(--shadow-sm), 0 0 40px rgba(0, 100, 255, 0.05);
+            transition: var(--transition-smooth);
+            margin: 1.5rem auto;
+            position: relative;
+        }
+        
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: -2px; left: 20%; right: 20%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            border-radius: 100%;
+            filter: blur(2px);
+            opacity: 0.7;
+        }
+
+        .header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo-icon-container {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(0, 150, 255, 0.2), rgba(0, 0, 0, 0.8));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(0, 150, 255, 0.3);
+            box-shadow: 0 0 30px rgba(0, 100, 255, 0.2);
+            position: relative;
+        }
+        
+        .logo-icon-container span {
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 0 0 15px var(--accent), 0 0 30px var(--primary-blue);
+        }
+
+        .header h1 {
+            font-size: 3.2rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            line-height: 1.1;
+            margin-bottom: 0.2rem;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #ffffff, #00c3ff, #4da6ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px rgba(0, 100, 255, 0.3);
+        }
+        
+        .header p {
+            font-size: 1.05rem;
+            color: var(--text-soft);
+            font-weight: 400;
+            margin-top: 0.2rem;
+            border-right: 3px solid var(--accent);
+            padding-right: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .search-mode-toggle {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.2rem;
+            background: rgba(0, 10, 20, 0.5);
+            border-radius: 60px;
+            padding: 0.4rem;
+            border: 1px solid rgba(0, 150, 255, 0.15);
+            backdrop-filter: blur(4px);
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 0.7rem 1.2rem;
+            border: none;
+            border-radius: 40px;
+            background: transparent;
+            color: var(--text-soft);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #003366, #001a33);
+            color: var(--text-main);
+            box-shadow: 0 4px 15px rgba(0, 100, 255, 0.3);
+            border: 1px solid rgba(0, 150, 255, 0.2);
+        }
+
+        .mode-btn:hover:not(.active) {
+            color: var(--text-main);
+            background: rgba(0, 50, 100, 0.3);
+        }
+
+        .search-box {
+            margin: 1.8rem 0 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .input-group {
+            position: relative;
+            width: 100%;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 1.2rem 1.8rem;
+            font-size: 1.2rem;
+            border: 2px solid rgba(0, 150, 255, 0.2);
+            border-radius: 80px;
+            background: rgba(0, 10, 20, 0.6);
+            backdrop-filter: blur(4px);
+            transition: var(--transition-smooth);
+            color: var(--text-main);
+            font-weight: 500;
+            outline: none;
+            direction: rtl;
+            text-align: right;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 6px rgba(0, 150, 255, 0.15), inset 0 0 15px rgba(0, 150, 255, 0.05);
+            background: rgba(0, 20, 40, 0.8);
+        }
+
+        .input-group input::placeholder {
+            color: #5a7a9a;
+            font-weight: 400;
+            font-size: 1.1rem;
+        }
+
+        .input-group input[type="number"]::-webkit-inner-spin-button,
+        .input-group input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .input-group input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .btn-primary {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            padding: 1.2rem 2rem;
+            font-size: 1.35rem;
+            font-weight: 700;
+            border: none;
+            border-radius: var(--radius-btn);
+            background: linear-gradient(135deg, #003366, #001a33);
+            color: var(--text-main);
+            cursor: pointer;
+            box-shadow: 0 10px 24px -8px rgba(0, 100, 255, 0.4), inset 0 0 20px rgba(0, 150, 255, 0.1);
+            transition: var(--transition-smooth);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border: 1px solid rgba(0, 150, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 18px 34px -10px rgba(0, 100, 255, 0.6), 0 0 20px var(--neon-glow);
+            background: linear-gradient(135deg, #004a99, #002244);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.97);
+            transition: 0.08s;
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(0, 150, 255, 0.4);
+            transform: scale(0);
+            animation: rippleAnim 0.7s ease-out;
+            pointer-events: none;
+        }
+        @keyframes rippleAnim {
+            to { transform: scale(4.5); opacity: 0; }
+        }
+
+        #resultContainer {
+            margin-top: 1.8rem;
+            min-height: 80px;
+            animation: fadeUp 0.45s ease;
+        }
+
+        .result-card {
+            background: rgba(0, 15, 30, 0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 30px;
+            padding: 1.8rem 2rem;
+            box-shadow: 0 8px 24px rgba(0,20,40,0.4);
+            border: 1px solid rgba(0, 150, 255, 0.2);
+            transition: var(--transition-smooth);
+            animation: fadeUp 0.5s ease;
+        }
+
+        .result-card .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid rgba(0, 150, 255, 0.1);
+            font-size: 1.1rem;
+        }
+        .result-card .row:last-child {
+            border-bottom: none;
+        }
+        .result-label {
+            color: var(--text-soft);
+            font-weight: 400;
+        }
+        .result-value {
+            font-weight: 600;
+            color: var(--text-main);
+            text-align: left;
+        }
+        .student-name {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 0.4rem;
+            text-shadow: 0 0 10px rgba(0, 100, 255, 0.3);
+        }
+        .rank-value {
+            color: #ffd700;
+            font-weight: 700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        .rank-not-available {
+            color: var(--text-soft);
+            font-weight: 400;
+        }
+
+        .error-card {
+            background: rgba(40, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            border-radius: 30px;
+            padding: 1.8rem 2rem;
+            border: 1px solid rgba(255, 50, 50, 0.3);
+            color: #ff6b6b;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            animation: fadeUp 0.4s ease;
+        }
+
+        .info-card {
+            background: rgba(0, 40, 60, 0.6);
+            backdrop-filter: blur(8px);
+            border-radius: 30px;
+            padding: 1.8rem 2rem;
+            border: 1px solid rgba(0, 150, 255, 0.3);
+            color: #4da6ff;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            animation: fadeUp 0.4s ease;
+        }
+
+        .error-card span,
+        .info-card span {
+            font-size: 2rem;
+        }
+
+        .skeleton-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 0.5rem 0;
+        }
+        .skeleton-line {
+            height: 1.8rem;
+            border-radius: 40px;
+            background: linear-gradient(90deg, #0a1a2a 25%, #1a3a5a 50%, #0a1a2a 75%);
+            background-size: 200% 100%;
+            animation: skeletonShimmer 1.4s infinite;
+        }
+        .skeleton-line.short { width: 55%; }
+        .skeleton-line.long { width: 90%; }
+        @keyframes skeletonShimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .spinner-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 0;
+        }
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid rgba(0, 150, 255, 0.1);
+            border-top: 5px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            box-shadow: 0 0 15px rgba(0, 150, 255, 0.2);
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .duplicate-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+
+        .duplicate-item {
+            background: rgba(0, 20, 40, 0.5);
+            border-radius: 16px;
+            padding: 1rem 1.5rem;
+            border: 1px solid rgba(0, 150, 255, 0.15);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--text-main);
+        }
+
+        .duplicate-item:hover {
+            background: rgba(0, 50, 100, 0.4);
+            border-color: var(--accent);
+            transform: translateX(-5px);
+            box-shadow: 0 4px 20px rgba(0, 100, 255, 0.2);
+        }
+
+        .duplicate-item .seat-number {
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .duplicate-item .hint {
+            color: var(--text-soft);
+            font-size: 0.9rem;
+            margin-top: 0.2rem;
+        }
+
+        .footer {
+            margin-top: 2.5rem;
+            font-size: 0.95rem;
+            color: #4a6a8a;
+            text-align: center;
+            letter-spacing: 0.3px;
+            opacity: 0.8;
+        }
+
+        @keyframes fadeUp {
+            0% { opacity: 0; transform: translateY(18px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in { animation: fadeUp 0.45s ease forwards; }
+
+        .input-group input:focus-visible,
+        .btn-primary:focus-visible,
+        .mode-btn:focus-visible {
+            outline: 3px solid var(--primary-light);
+            outline-offset: 3px;
+        }
+
+        @media (max-width: 480px) {
+            .glass-card { padding: 1.5rem 1.2rem; }
+            .header h1 { font-size: 2.2rem; letter-spacing: 2px; }
+            .logo-icon-container { width: 60px; height: 60px; }
+            .logo-icon-container span { font-size: 2rem; }
+            .input-group input { font-size: 1rem; padding: 1rem 1.4rem; }
+            .btn-primary { font-size: 1.1rem; padding: 1rem 1.5rem; }
+            .result-card .row { font-size: 1rem; flex-wrap: wrap; gap: 0.2rem; }
+            .student-name { font-size: 1.4rem; }
+            .mode-btn { font-size: 0.85rem; padding: 0.6rem 0.8rem; }
+        }
+
+        @media (min-width: 768px) {
+            .glass-card { padding: 2.8rem 3rem; }
+            .search-box { flex-direction: row; align-items: center; gap: 1rem; }
+            .input-group { flex: 3; }
+            .btn-primary { flex: 1.2; width: auto; padding: 1.2rem 1.8rem; }
+        }
+
+        @media (max-width: 767px) {
+            .search-box { flex-direction: column; }
+            .btn-primary { width: 100%; }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+            background: rgba(0, 150, 255, 0.15);
+            color: var(--accent);
+            font-weight: 600;
+            border: 1px solid rgba(0, 150, 255, 0.1);
+        }
+        .status-badge.success { background: rgba(40, 200, 100, 0.15); color: #00ff88; border-color: rgba(0, 255, 136, 0.2); }
+        .status-badge.fail { background: rgba(255, 50, 50, 0.15); color: #ff6b6b; border-color: rgba(255, 80, 80, 0.2); }
+
+        #popupOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 8, 14, 0.9);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        #popupOverlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .popup-box {
+            background: rgba(10, 25, 45, 0.9);
+            max-width: 400px;
+            width: 90%;
+            border-radius: 30px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 40px rgba(0, 100, 255, 0.2);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            border: 1px solid rgba(0, 150, 255, 0.3);
+        }
+        #popupOverlay.active .popup-box {
+            transform: scale(1);
+        }
+
+        .popup-box h2 {
+            color: var(--text-main);
+            margin-bottom: 1rem;
+            font-size: 1.6rem;
+            text-shadow: 0 0 10px rgba(0, 100, 255, 0.3);
+        }
+        .popup-box p {
+            color: var(--text-soft);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .popup-logo-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(0, 150, 255, 0.3), rgba(0, 0, 0, 0.8));
+            margin: 0 auto 1rem;
+            border: 1px solid rgba(0, 150, 255, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0, 100, 255, 0.3);
+        }
+        .popup-logo-icon span {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 10px var(--accent);
+        }
+
+        .btn-instagram {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); 
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 8px 20px rgba(225, 48, 108, 0.4);
+            transition: var(--transition-smooth);
+            width: 100%;
+        }
+        .btn-instagram:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 28px rgba(225, 48, 108, 0.6);
+        }
+        
+        .btn-skip {
+            margin-top: 15px;
+            background: transparent;
+            border: none;
+            color: #5a7a9a;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: underline;
+            transition: color 0.2s;
+        }
+        .btn-skip:hover {
+            color: #88b0d6;
+        }
+    </style>
+</head>
+<body>
+    <div id="popupOverlay">
+        <div class="popup-box">
+            <div class="popup-logo-icon">
+                <span>V</span>
+            </div>
+            <h2>تابعنا على إنستغرام</h2>
+            <p>للحصول على آخر الأخبار والتحديثات، يرجى متابعة حسابنا على إنستغرام أولاً:</p>
+            
+            <a href="https://www.instagram.com/_vexo.lab__?igsh=aGFya2o5MW41ZXU=" target="_blank" class="btn-instagram" id="followBtn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                متابعة
+            </a>
+            
+            <button class="btn-skip" id="closePopupBtn">تخطي (لن تعمل النتيجة بدونه)</button>
+        </div>
+    </div>
+
+    <main class="glass-card" role="main">
+        <header class="header">
+            <div class="logo-icon-container">
+                <span>V</span>
+            </div>
+            <h1>VEXOLAB</h1>
+            <p>نتيجة الثانوية العامة - استعلام فوري</p>
+        </header>
+
+        <div class="search-mode-toggle" role="radiogroup" aria-label="طريقة البحث">
+            <button class="mode-btn active" data-mode="seat" role="radio" aria-checked="true" id="modeSeat">رقم الجلوس</button>
+            <button class="mode-btn" data-mode="name" role="radio" aria-checked="false" id="modeName">الاسم</button>
+        </div>
+
+        <section class="search-box" role="search" aria-label="استعلام نتيجة">
+            <div class="input-group">
+                <input type="text" id="searchInput" placeholder="أدخل رقم الجلوس" aria-label="رقم الجلوس" inputmode="numeric" autofocus>
+            </div>
+            <button class="btn-primary" id="searchBtn" aria-label="عرض النتيجة">
+                عرض النتيجة
+            </button>
+        </section>
+
+        <div id="resultContainer" aria-live="polite" aria-atomic="true">
+        </div>
+
+        <footer class="footer">
+            © جميع الحقوق محفوظة لدى VexoLab / م. محمد صلاح 2026
+        </footer>
+    </main>
+
+    <script>
+        (function() {
+            "use strict";
+
+            // ---------- CONSTANTS ----------
+            const TOTAL_SCORE = 320;
+            const MAX_FOLDERS_TO_CHECK = 20; // Maximum number of folders to check
+
+            // ---------- DOM refs ----------
+            const searchInput = document.getElementById('searchInput');
+            const searchBtn = document.getElementById('searchBtn');
+            const resultContainer = document.getElementById('resultContainer');
+            const modeSeat = document.getElementById('modeSeat');
+            const modeName = document.getElementById('modeName');
+            
+            const popupOverlay = document.getElementById('popupOverlay');
+            const followBtn = document.getElementById('followBtn');
+            const closePopupBtn = document.getElementById('closePopupBtn');
+
+            // ---------- STATE ----------
+            let currentMode = 'seat';
+            const cache = new Map();
+            let isUnlocked = false;
+            let folderCache = new Map(); // Cache for folder discovery per prefix
+
+            // ---------- POPUP LOGIC ----------
+            if (sessionStorage.getItem('vexolab_unlocked') === 'true') {
+                isUnlocked = true;
+            } else {
+                setTimeout(() => {
+                    popupOverlay.classList.add('active');
+                }, 500);
+            }
+
+            followBtn.addEventListener('click', function() {
+                window.open('https://www.instagram.com/_vexo.lab__?igsh=aGFya2o5MW41ZXU=', '_blank');
+                isUnlocked = true;
+                sessionStorage.setItem('vexolab_unlocked', 'true');
+                popupOverlay.classList.remove('active');
+            });
+
+            closePopupBtn.addEventListener('click', function() {
+                popupOverlay.classList.remove('active');
+            });
+
+            // ---------- RIPPLE EFFECT ----------
+            function addRipple(e) {
+                const btn = e.currentTarget;
+                const rect = btn.getBoundingClientRect();
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple';
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = size + 'px';
+                const x = (e.clientX || e.touches?.[0]?.clientX || rect.left + rect.width/2) - rect.left - size/2;
+                const y = (e.clientY || e.touches?.[0]?.clientY || rect.top + rect.height/2) - rect.top - size/2;
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                btn.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 700);
+            }
+
+            searchBtn.addEventListener('click', addRipple);
+
+            // ---------- MODE TOGGLE ----------
+            function setMode(mode) {
+                currentMode = mode;
+                const isSeat = mode === 'seat';
+                
+                modeSeat.classList.toggle('active', isSeat);
+                modeSeat.setAttribute('aria-checked', isSeat);
+                modeName.classList.toggle('active', !isSeat);
+                modeName.setAttribute('aria-checked', !isSeat);
+                
+                searchInput.value = '';
+                searchInput.placeholder = isSeat ? 'أدخل رقم الجلوس' : 'أدخل الاسم (ثلاثي أو رباعي)';
+                searchInput.type = 'text';
+                searchInput.inputMode = isSeat ? 'numeric' : 'text';
+                
+                resultContainer.innerHTML = '';
+            }
+
+            modeSeat.addEventListener('click', function() {
+                if (currentMode !== 'seat') {
+                    setMode('seat');
+                    searchInput.focus();
+                }
+            });
+
+            modeName.addEventListener('click', function() {
+                if (currentMode !== 'name') {
+                    setMode('name');
+                    searchInput.focus();
+                }
+            });
+
+            // ---------- NAME NORMALIZATION FUNCTIONS ----------
+            function normalizeArabicName(name) {
+                const map = {
+                    'أ': 'ا',
+                    'إ': 'ا',
+                    'آ': 'ا',
+                    'ى': 'ي',
+                    'ة': 'ه'
+                };
+                
+                let normalized = '';
+                for (let char of name) {
+                    normalized += map[char] || char;
+                }
+                
+                normalized = normalized.replace(/\s+/g, ' ').trim();
+                return normalized;
+            }
+
+            function generateNameKey(name) {
+                const normalized = normalizeArabicName(name);
+                const words = normalized.split(/\s+/).filter(w => w.length > 0);
+                const parts = words.map(word => {
+                    return word.length >= 3 ? word.substring(0, 3) : word;
+                });
+                return parts.join('');
+            }
+
+            // ---------- FIND STUDENT FILE BY TRYING FOLDERS ----------
+            async function findStudentFile(prefix) {
+                // Check cache first
+                if (folderCache.has(prefix)) {
+                    return folderCache.get(prefix);
+                }
+
+                // Try folders from 1 to MAX_FOLDERS_TO_CHECK
+                for (let i = 1; i <= MAX_FOLDERS_TO_CHECK; i++) {
+                    const folderName = `data_${i}`;
+                    const filePath = `data/${folderName}/${prefix}.json`;
+                    
+                    try {
+                        const response = await fetch(filePath, { method: 'HEAD' });
+                        if (response.ok) {
+                            // Found the file
+                            folderCache.set(prefix, filePath);
+                            return filePath;
+                        }
+                    } catch (err) {
+                        // Continue to next folder
+                        continue;
+                    }
+                }
+                
+                // If not found, try one more time with a GET request (in case HEAD is blocked)
+                for (let i = 1; i <= MAX_FOLDERS_TO_CHECK; i++) {
+                    const folderName = `data_${i}`;
+                    const filePath = `data/${folderName}/${prefix}.json`;
+                    
+                    try {
+                        const response = await fetch(filePath);
+                        if (response.ok) {
+                            // Found the file
+                            folderCache.set(prefix, filePath);
+                            return filePath;
+                        }
+                    } catch (err) {
+                        continue;
+                    }
+                }
+                
+                // File not found in any folder
+                folderCache.set(prefix, null);
+                return null;
+            }
+
+            // ---------- FETCH STUDENT DATA WITH FOLDER DISCOVERY ----------
+            async function fetchStudentData(seat) {
+                const seatStr = String(seat).trim();
+                const prefix = seatStr.substring(0, 3);
+                
+                // Check cache first
+                const cacheKey = `student_${prefix}`;
+                if (cache.has(cacheKey)) {
+                    return cache.get(cacheKey);
+                }
+
+                // Find the file path
+                const filePath = await findStudentFile(prefix);
+                if (!filePath) {
+                    cache.set(cacheKey, null);
+                    return null;
+                }
+
+                try {
+                    const response = await fetch(filePath);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    const data = await response.json();
+                    
+                    if (!data || typeof data !== 'object' || !data.students) {
+                        throw new Error('بيانات غير صالحة');
+                    }
+                    
+                    cache.set(cacheKey, data);
+                    return data;
+                } catch (err) {
+                    console.warn('Failed to fetch student data:', err);
+                    throw new Error('فشل تحميل بيانات الطالب');
+                }
+            }
+
+            // ---------- SEAT SEARCH (Dynamic folder discovery) ----------
+            async function searchBySeat(seatNumber) {
+                if (!isUnlocked) {
+                    popupOverlay.classList.add('active');
+                    renderError('يجب متابعة الحساب أولاً للاستعلام عن النتيجة');
+                    return;
+                }
+
+                const seat = String(seatNumber).trim();
+                if (!seat || seat.length === 0) {
+                    renderError('الرجاء إدخال رقم الجلوس');
+                    return;
+                }
+
+                if (!/^\d+$/.test(seat)) {
+                    renderError('رقم الجلوس يجب أن يحتوي على أرقام فقط');
+                    return;
+                }
+
+                const prefix = seat.substring(0, 3);
+                if (prefix.length < 3) {
+                    renderError('رقم الجلوس يجب أن يكون مكوناً من 3 أرقام على الأقل');
+                    return;
+                }
+
+                showSkeleton();
+
+                try {
+                    const data = await fetchStudentData(seat);
+                    
+                    if (!data) {
+                        renderNotFound();
+                        return;
+                    }
+
+                    const student = data.students[seat];
+                    if (!student) {
+                        renderNotFound();
+                        return;
+                    }
+
+                    renderStudent(seat, student);
+
+                } catch (err) {
+                    console.warn('Seat search error:', err);
+                    let msg = 'حدث خطأ أثناء البحث';
+                    if (err.message.includes('بيانات غير صالحة')) {
+                        msg = 'صيغة البيانات غير صالحة';
+                    } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+                        msg = 'فشل الاتصال، تحقق من اتصالك بالإنترنت';
+                    } else {
+                        msg = err.message || 'خطأ غير معروف';
+                    }
+                    renderError(msg);
+                }
+            }
+
+            // ---------- NAME SEARCH (Unchanged) ----------
+            async function searchByName(name) {
+                if (!isUnlocked) {
+                    popupOverlay.classList.add('active');
+                    renderError('يجب متابعة الحساب أولاً للاستعلام عن النتيجة');
+                    return;
+                }
+
+                const fullName = String(name).trim();
+                if (!fullName || fullName.length === 0) {
+                    renderError('الرجاء إدخال الاسم');
+                    return;
+                }
+
+                const nameKey = generateNameKey(fullName);
+                if (nameKey.length < 2) {
+                    renderError('الاسم قصير جداً، يرجى إدخال اسم كامل');
+                    return;
+                }
+
+                const filePrefix = nameKey.substring(0, 2);
+                
+                let hash = 0;
+                for (let i = 0; i < filePrefix.length; i++) {
+                    hash = (hash * 31 + filePrefix.charCodeAt(i)) & 0xFFFFFFFF;
+                }
+                const folderNum = (Math.abs(hash) % 100) + 1;
+                const folderName = `names_${folderNum}`;
+                const filePath = `names/${folderName}/${filePrefix}.json`;
+
+                showSkeleton();
+
+                try {
+                    let data = null;
+                    const cacheKey = `name_${folderName}_${filePrefix}`;
+                    
+                    if (cache.has(cacheKey)) {
+                        data = cache.get(cacheKey);
+                    } else {
+                        const response = await fetch(filePath);
+                        
+                        if (response.status === 404) {
+                            renderNotFound();
+                            return;
+                        }
+
+                        if (!response.ok) {
+                            throw new Error(`خطأ في التحميل (${response.status})`);
+                        }
+
+                        data = await response.json();
+                        if (!data || typeof data !== 'object') {
+                            throw new Error('بيانات غير صالحة');
+                        }
+                        cache.set(cacheKey, data);
+                    }
+
+                    const seatNumbers = data[nameKey];
+                    if (!seatNumbers || seatNumbers.length === 0) {
+                        renderNotFound();
+                        return;
+                    }
+
+                    if (seatNumbers.length === 1) {
+                        const seat = seatNumbers[0];
+                        await fetchAndRenderStudent(seat);
+                    } else {
+                        renderDuplicateList(seatNumbers, fullName);
+                    }
+
+                } catch (err) {
+                    console.warn('Name search error:', err);
+                    let msg = 'حدث خطأ أثناء البحث';
+                    if (err.message.includes('بيانات غير صالحة')) {
+                        msg = 'صيغة البيانات غير صالحة';
+                    } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+                        msg = 'فشل الاتصال، تحقق من اتصالك بالإنترنت';
+                    } else {
+                        msg = err.message || 'خطأ غير معروف';
+                    }
+                    renderError(msg);
+                }
+            }
+
+            // ---------- FETCH AND RENDER STUDENT (Dynamic folder discovery) ----------
+            async function fetchAndRenderStudent(seat) {
+                const seatStr = String(seat).trim();
+                if (!/^\d+$/.test(seatStr)) {
+                    renderError('رقم الجلوس غير صالح');
+                    return;
+                }
+
+                showSkeleton();
+
+                try {
+                    const data = await fetchStudentData(seatStr);
+                    
+                    if (!data) {
+                        renderNotFound();
+                        return;
+                    }
+
+                    const student = data.students[seatStr];
+                    if (!student) {
+                        renderNotFound();
+                        return;
+                    }
+
+                    renderStudent(seatStr, student);
+
+                } catch (err) {
+                    console.warn('Fetch student error:', err);
+                    let msg = 'حدث خطأ أثناء تحميل بيانات الطالب';
+                    if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+                        msg = 'فشل الاتصال، تحقق من اتصالك بالإنترنت';
+                    } else {
+                        msg = err.message || 'خطأ غير معروف';
+                    }
+                    renderError(msg);
+                }
+            }
+
+            // ---------- RENDER FUNCTIONS ----------
+            function showSkeleton() {
+                resultContainer.innerHTML = `
+                    <div class="skeleton-wrapper fade-in">
+                        <div class="skeleton-line long"></div>
+                        <div class="skeleton-line short"></div>
+                        <div class="skeleton-line long"></div>
+                    </div>
+                `;
+            }
+
+            function renderStudent(seat, studentData) {
+                const statusText = studentData.s || "غير معروف";
+                
+                let badgeClass = 'status-badge';
+                if (statusText.includes('ناجح')) {
+                    badgeClass += ' success';
+                } else if (statusText.includes('راسب')) {
+                    badgeClass += ' fail';
+                }
+
+                const percentage = ((studentData.t / TOTAL_SCORE) * 100).toFixed(2);
+
+                let rankHtml = '';
+                if (studentData.rank !== undefined && studentData.rank !== null) {
+                    rankHtml = `
+                        <div class="row">
+                            <span class="result-label">الترتيب على مستوى الجمهورية</span>
+                            <span class="result-value rank-value">#${studentData.rank.toLocaleString('ar-EG')}</span>
+                        </div>
+                    `;
+                } else {
+                    rankHtml = `
+                        <div class="row">
+                            <span class="result-label">الترتيب على مستوى الجمهورية</span>
+                            <span class="result-value rank-not-available">غير متاح</span>
+                        </div>
+                    `;
+                }
+
+                resultContainer.innerHTML = `
+                    <div class="result-card fade-in">
+                        <div class="student-name">${studentData.n}</div>
+                        <div class="row"><span class="result-label">رقم الجلوس</span><span class="result-value">${seat}</span></div>
+                        <div class="row"><span class="result-label">المجموع</span><span class="result-value">${studentData.t} من ${TOTAL_SCORE}</span></div>
+                        <div class="row"><span class="result-label">النسبة المئوية</span><span class="result-value">${percentage}%</span></div>
+                        <div class="row"><span class="result-label">الحالة</span><span class="result-value"><span class="${badgeClass}">${statusText}</span></span></div>
+                        ${rankHtml}
+                    </div>
+                `;
+            }
+
+            function renderDuplicateList(seatNumbers, name) {
+                let listHtml = seatNumbers.map(seat => `
+                    <div class="duplicate-item" data-seat="${seat}">
+                        <div class="seat-number">رقم الجلوس: ${seat}</div>
+                        <div class="hint">اضغط لعرض النتيجة</div>
+                    </div>
+                `).join('');
+
+                resultContainer.innerHTML = `
+                    <div class="result-card fade-in">
+                        <div class="student-name" style="font-size:1.3rem; text-align:center;">تم العثور على أكثر من طالب بهذا الاسم</div>
+                        <div style="text-align:center; color:var(--text-soft); margin-bottom:1rem;">"${name}"</div>
+                        <div class="duplicate-list">
+                            ${listHtml}
+                        </div>
+                    </div>
+                `;
+
+                document.querySelectorAll('.duplicate-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const seat = this.dataset.seat;
+                        fetchAndRenderStudent(seat);
+                    });
+                });
+            }
+
+            function renderNotFound() {
+                resultContainer.innerHTML = `
+                    <div class="error-card fade-in">
+                        <span>❌</span> لم يتم العثور على نتائج
+                    </div>
+                `;
+            }
+
+            function renderNotAnnounced() {
+                resultContainer.innerHTML = `
+                    <div class="info-card fade-in">
+                        <span>⏳</span> لم يتم الإعلان عن النتيجة بعد
+                    </div>
+                `;
+            }
+
+            function renderError(msg = 'حدث خطأ أثناء تحميل البيانات') {
+                resultContainer.innerHTML = `
+                    <div class="error-card fade-in">
+                        <span>⚠️</span> ${msg}
+                    </div>
+                `;
+            }
+
+            // ---------- MAIN SEARCH HANDLER ----------
+            function performSearch() {
+                const input = searchInput.value.trim();
+                if (!input) {
+                    renderError('الرجاء إدخال قيمة للبحث');
+                    return;
+                }
+
+                if (currentMode === 'seat') {
+                    searchBySeat(input);
+                } else {
+                    searchByName(input);
+                }
+            }
+
+            // ---------- EVENT HANDLERS ----------
+            searchBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                performSearch();
+            });
+
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    performSearch();
+                }
+            });
+
+            // ---------- INITIAL SETUP ----------
+            setMode('seat');
+            searchInput.focus();
+
+            console.log('✅ VexoLab System Ready (Dynamic folder discovery - no index.json)');
+        })();
+    </script>
+</body>
+</html>
