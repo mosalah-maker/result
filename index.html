@@ -650,7 +650,7 @@
 
             // ---------- CONSTANTS ----------
             const TOTAL_SCORE = 320;
-            const MAX_FOLDERS_TO_CHECK = 20;
+            const MAX_FOLDERS_TO_CHECK = 30;
 
             // ---------- DOM refs ----------
             const searchInput = document.getElementById('searchInput');
@@ -667,7 +667,7 @@
             let currentMode = 'seat';
             const cache = new Map();
             let isUnlocked = false;
-            let folderCache = new Map(); // Cache for folder discovery per prefix
+            let folderCache = new Map();
 
             // ---------- POPUP LOGIC ----------
             if (sessionStorage.getItem('vexolab_unlocked') === 'true') {
@@ -767,22 +767,44 @@
                 return parts.join('');
             }
 
-            // ---------- FIND STUDENT FILE BY TRYING FOLDERS ----------
-            async function findStudentFile(prefix) {
-                // Check cache first
-                if (folderCache.has(prefix)) {
-                    return folderCache.get(prefix);
+            // ---------- FIND DATA FILE (with intelligent folder search) ----------
+            async function findDataFile(prefix) {
+                const cacheKey = `data_${prefix}`;
+                if (folderCache.has(cacheKey)) {
+                    return folderCache.get(cacheKey);
                 }
 
-                // Try folders from 1 to MAX_FOLDERS_TO_CHECK
-                for (let i = 1; i <= MAX_FOLDERS_TO_CHECK; i++) {
-                    const folderName = `data_${i}`;
+                // Calculate expected folder number
+                const expectedFolder = Math.ceil(parseInt(prefix) / 50);
+                
+                // Try expected folder first, then nearby folders
+                const foldersToTry = [];
+                
+                // Add expected folder
+                if (expectedFolder > 0) {
+                    foldersToTry.push(expectedFolder);
+                }
+                
+                // Add surrounding folders (up to 5 in each direction)
+                for (let offset = 1; offset <= 5; offset++) {
+                    if (expectedFolder - offset > 0) {
+                        foldersToTry.push(expectedFolder - offset);
+                    }
+                    foldersToTry.push(expectedFolder + offset);
+                }
+                
+                // Remove duplicates and sort
+                const uniqueFolders = [...new Set(foldersToTry)].sort((a, b) => a - b);
+                
+                // Try each folder
+                for (const folderNum of uniqueFolders) {
+                    const folderName = `data_${folderNum}`;
                     const filePath = `data/${folderName}/${prefix}.json`;
                     
                     try {
                         const response = await fetch(filePath, { method: 'HEAD' });
                         if (response.ok) {
-                            folderCache.set(prefix, filePath);
+                            folderCache.set(cacheKey, filePath);
                             return filePath;
                         }
                     } catch (err) {
@@ -790,7 +812,7 @@
                     }
                 }
                 
-                // If not found, try with GET (in case HEAD is blocked)
+                // If not found in nearby folders, try sequential search
                 for (let i = 1; i <= MAX_FOLDERS_TO_CHECK; i++) {
                     const folderName = `data_${i}`;
                     const filePath = `data/${folderName}/${prefix}.json`;
@@ -798,7 +820,7 @@
                     try {
                         const response = await fetch(filePath);
                         if (response.ok) {
-                            folderCache.set(prefix, filePath);
+                            folderCache.set(cacheKey, filePath);
                             return filePath;
                         }
                     } catch (err) {
@@ -806,21 +828,48 @@
                     }
                 }
                 
-                folderCache.set(prefix, null);
+                folderCache.set(cacheKey, null);
                 return null;
             }
 
-            // ---------- FIND NAME FILE BY TRYING FOLDERS ----------
+            // ---------- FIND NAME FILE (with intelligent folder search) ----------
             async function findNameFile(filePrefix) {
-                // Check cache first
                 const cacheKey = `name_${filePrefix}`;
                 if (folderCache.has(cacheKey)) {
                     return folderCache.get(cacheKey);
                 }
 
-                // Try folders from 1 to MAX_FOLDERS_TO_CHECK
-                for (let i = 1; i <= MAX_FOLDERS_TO_CHECK; i++) {
-                    const folderName = `names_${i}`;
+                // Calculate hash for expected folder
+                let hash = 0;
+                for (let i = 0; i < filePrefix.length; i++) {
+                    hash = (hash * 31 + filePrefix.charCodeAt(i)) & 0xFFFFFFFF;
+                }
+                const expectedFolder = (Math.abs(hash) % 100) + 1;
+                
+                // Try expected folder first, then nearby folders
+                const foldersToTry = [];
+                
+                // Add expected folder
+                if (expectedFolder > 0) {
+                    foldersToTry.push(expectedFolder);
+                }
+                
+                // Add surrounding folders (up to 10 in each direction)
+                for (let offset = 1; offset <= 10; offset++) {
+                    if (expectedFolder - offset > 0) {
+                        foldersToTry.push(expectedFolder - offset);
+                    }
+                    if (expectedFolder + offset <= 100) {
+                        foldersToTry.push(expectedFolder + offset);
+                    }
+                }
+                
+                // Remove duplicates and sort
+                const uniqueFolders = [...new Set(foldersToTry)].sort((a, b) => a - b);
+                
+                // Try each folder
+                for (const folderNum of uniqueFolders) {
+                    const folderName = `names_${folderNum}`;
                     const filePath = `names/${folderName}/${filePrefix}.json`;
                     
                     try {
@@ -834,7 +883,7 @@
                     }
                 }
                 
-                // If not found, try with GET (in case HEAD is blocked)
+                // If not found in nearby folders, try sequential search
                 for (let i = 1; i <= MAX_FOLDERS_TO_CHECK; i++) {
                     const folderName = `names_${i}`;
                     const filePath = `names/${folderName}/${filePrefix}.json`;
@@ -854,7 +903,7 @@
                 return null;
             }
 
-            // ---------- FETCH STUDENT DATA WITH FOLDER DISCOVERY ----------
+            // ---------- FETCH STUDENT DATA ----------
             async function fetchStudentData(seat) {
                 const seatStr = String(seat).trim();
                 const prefix = seatStr.substring(0, 3);
@@ -864,7 +913,7 @@
                     return cache.get(cacheKey);
                 }
 
-                const filePath = await findStudentFile(prefix);
+                const filePath = await findDataFile(prefix);
                 if (!filePath) {
                     cache.set(cacheKey, null);
                     return null;
@@ -946,7 +995,7 @@
                 }
             }
 
-            // ---------- NAME SEARCH (Dynamic folder discovery) ----------
+            // ---------- NAME SEARCH ----------
             async function searchByName(name) {
                 if (!isUnlocked) {
                     popupOverlay.classList.add('active');
@@ -971,7 +1020,6 @@
                 showSkeleton();
 
                 try {
-                    // Find the file path dynamically
                     const filePath = await findNameFile(filePrefix);
                     
                     if (!filePath) {
@@ -1197,7 +1245,7 @@
             setMode('seat');
             searchInput.focus();
 
-            console.log('✅ VexoLab System Ready (Dynamic folder discovery - no index.json)');
+            console.log('✅ VexoLab System Ready (Intelligent folder discovery)');
         })();
     </script>
 </body>
