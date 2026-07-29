@@ -8,14 +8,12 @@
     <meta name="keywords" content="ثانوية عامة, نتيجة, استعلام, رقم الجلوس, اسم, مصر, 2025">
     <meta name="theme-color" content="#0b1d2e">
     
-    <!-- Open Graph -->
     <meta property="og:title" content="VexoLab | نتيجة الثانوية العامة">
     <meta property="og:description" content="استعلام فوري بنظام تكنولوجي.">
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 
     <style>
-        /* ----- CSS Variables & Reset ----- */
         * {
             margin: 0;
             padding: 0;
@@ -23,23 +21,18 @@
         }
 
         :root {
-            /* ألوان مستوحاة من اللوجو (الأزرق المعدني والنيون) */
-            --bg-color: #03080e; /* لون خلفية داكن جداً */
+            --bg-color: #03080e;
             --bg-gradient: radial-gradient(circle at 50% 0%, #162a42 0%, #03080e 70%);
             --card-bg: rgba(13, 27, 42, 0.6);
             --glass-border: rgba(54, 143, 255, 0.2);
-            
             --neon-glow: rgba(0, 150, 255, 0.4);
             --neon-text: #00c3ff;
-            
             --primary-dark: #0b1d2e;
             --primary-blue: #1a6bbd;
             --primary-light: #4da6ff;
             --accent: #00a6ff;
-            
             --text-main: #e0f0ff;
             --text-soft: #88b0d6;
-            
             --shadow-sm: 0 12px 30px rgba(0, 20, 40, 0.5);
             --shadow-hover: 0 25px 45px rgba(0, 100, 255, 0.2);
             --radius-card: 28px;
@@ -63,7 +56,6 @@
             overflow-x: hidden;
         }
 
-        /* ----- Main Container (Glassmorphism Dark) ----- */
         .glass-card {
             max-width: 640px;
             width: 100%;
@@ -79,7 +71,6 @@
             position: relative;
         }
         
-        /* تأثير الخطوط التكنولوجية (مثل اللوجو) */
         .glass-card::before {
             content: '';
             position: absolute;
@@ -91,7 +82,6 @@
             opacity: 0.7;
         }
 
-        /* ----- Header & Logo Text ----- */
         .header {
             display: flex;
             flex-direction: column;
@@ -144,7 +134,6 @@
             letter-spacing: 1px;
         }
 
-        /* ----- Search Mode Toggle ----- */
         .search-mode-toggle {
             display: flex;
             gap: 0.5rem;
@@ -183,7 +172,6 @@
             background: rgba(0, 50, 100, 0.3);
         }
 
-        /* ----- Search Box ----- */
         .search-box {
             margin: 1.8rem 0 1.8rem;
             display: flex;
@@ -225,7 +213,6 @@
             font-size: 1.1rem;
         }
 
-        /* Remove number arrows */
         .input-group input[type="number"]::-webkit-inner-spin-button,
         .input-group input[type="number"]::-webkit-outer-spin-button {
             -webkit-appearance: none;
@@ -235,7 +222,6 @@
             -moz-appearance: textfield;
         }
 
-        /* ----- Button with Ripple & Neon ----- */
         .btn-primary {
             position: relative;
             overflow: hidden;
@@ -266,7 +252,6 @@
             transition: 0.08s;
         }
 
-        /* Ripple effect */
         .ripple {
             position: absolute;
             border-radius: 50%;
@@ -279,7 +264,6 @@
             to { transform: scale(4.5); opacity: 0; }
         }
 
-        /* ----- Result / Status Cards ----- */
         #resultContainer {
             margin-top: 1.8rem;
             min-height: 80px;
@@ -333,7 +317,6 @@
             font-weight: 400;
         }
 
-        /* Error / Not found / Not announced */
         .error-card {
             background: rgba(40, 0, 0, 0.6);
             backdrop-filter: blur(8px);
@@ -373,7 +356,6 @@
             font-size: 2rem;
         }
 
-        /* Skeleton Loader */
         .skeleton-wrapper {
             display: flex;
             flex-direction: column;
@@ -394,7 +376,6 @@
             100% { background-position: -200% 0; }
         }
 
-        /* Spinner */
         .spinner-center {
             display: flex;
             justify-content: center;
@@ -412,7 +393,6 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Duplicate Results List */
         .duplicate-list {
             display: flex;
             flex-direction: column;
@@ -451,7 +431,6 @@
             margin-top: 0.2rem;
         }
 
-        /* ----- Footer ----- */
         .footer {
             margin-top: 2.5rem;
             font-size: 0.95rem;
@@ -461,7 +440,6 @@
             opacity: 0.8;
         }
 
-        /* ----- Animations & Utilities ----- */
         @keyframes fadeUp {
             0% { opacity: 0; transform: translateY(18px); }
             100% { opacity: 1; transform: translateY(0); }
@@ -469,7 +447,6 @@
 
         .fade-in { animation: fadeUp 0.45s ease forwards; }
 
-        /* Focus-visible */
         .input-group input:focus-visible,
         .btn-primary:focus-visible,
         .mode-btn:focus-visible {
@@ -477,7 +454,6 @@
             outline-offset: 3px;
         }
 
-        /* Responsive */
         @media (max-width: 480px) {
             .glass-card { padding: 1.5rem 1.2rem; }
             .header h1 { font-size: 2.2rem; letter-spacing: 2px; }
@@ -514,8 +490,6 @@
         .status-badge.success { background: rgba(40, 200, 100, 0.15); color: #00ff88; border-color: rgba(0, 255, 136, 0.2); }
         .status-badge.fail { background: rgba(255, 50, 50, 0.15); color: #ff6b6b; border-color: rgba(255, 80, 80, 0.2); }
 
-
-        /* ----- Popup Overlay (Instagram Follow - Neon Style) ----- */
         #popupOverlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -622,7 +596,6 @@
     </style>
 </head>
 <body>
-    <!-- Instagram Follow Popup Overlay -->
     <div id="popupOverlay">
         <div class="popup-box">
             <div class="popup-logo-icon">
@@ -640,9 +613,7 @@
         </div>
     </div>
 
-    <!-- Main App -->
     <main class="glass-card" role="main">
-        <!-- Header with Tech Style -->
         <header class="header">
             <div class="logo-icon-container">
                 <span>V</span>
@@ -651,13 +622,11 @@
             <p>نتيجة الثانوية العامة - استعلام فوري</p>
         </header>
 
-        <!-- Search Mode Toggle -->
         <div class="search-mode-toggle" role="radiogroup" aria-label="طريقة البحث">
             <button class="mode-btn active" data-mode="seat" role="radio" aria-checked="true" id="modeSeat">رقم الجلوس</button>
             <button class="mode-btn" data-mode="name" role="radio" aria-checked="false" id="modeName">الاسم</button>
         </div>
 
-        <!-- Search Section -->
         <section class="search-box" role="search" aria-label="استعلام نتيجة">
             <div class="input-group">
                 <input type="text" id="searchInput" placeholder="أدخل رقم الجلوس" aria-label="رقم الجلوس" inputmode="numeric" autofocus>
@@ -667,12 +636,9 @@
             </button>
         </section>
 
-        <!-- Result Container -->
         <div id="resultContainer" aria-live="polite" aria-atomic="true">
-            <!-- dynamic content -->
         </div>
 
-        <!-- Footer -->
         <footer class="footer">
             © جميع الحقوق محفوظة لدى VexoLab / م. محمد صلاح 2026
         </footer>
@@ -683,16 +649,7 @@
             "use strict";
 
             // ---------- CONSTANTS ----------
-            const STATUS = Object.freeze({
-                0: "ناجح",
-                1: "ناجح",
-                2: "ناجح دور ثان",
-                3: "دور ثان",
-                4: "راسب",
-                5: "ملغي",
-                6: "محروم",
-                7: "غائب"
-            });
+            // STATUS constant removed - now reading directly from JSON
 
             const TOTAL_SCORE = 320;
 
@@ -703,15 +660,15 @@
             const modeSeat = document.getElementById('modeSeat');
             const modeName = document.getElementById('modeName');
             
-            // Popup refs
             const popupOverlay = document.getElementById('popupOverlay');
             const followBtn = document.getElementById('followBtn');
             const closePopupBtn = document.getElementById('closePopupBtn');
 
             // ---------- STATE ----------
-            let currentMode = 'seat'; // 'seat' or 'name'
+            let currentMode = 'seat';
             const cache = new Map();
             let isUnlocked = false;
+            let indexData = null;
 
             // ---------- POPUP LOGIC ----------
             if (sessionStorage.getItem('vexolab_unlocked') === 'true') {
@@ -763,10 +720,9 @@
                 
                 searchInput.value = '';
                 searchInput.placeholder = isSeat ? 'أدخل رقم الجلوس' : 'أدخل الاسم (ثلاثي أو رباعي)';
-                searchInput.type = isSeat ? 'text' : 'text';
+                searchInput.type = 'text';
                 searchInput.inputMode = isSeat ? 'numeric' : 'text';
                 
-                // Clear result when switching modes
                 resultContainer.innerHTML = '';
             }
 
@@ -786,7 +742,6 @@
 
             // ---------- NAME NORMALIZATION FUNCTIONS ----------
             function normalizeArabicName(name) {
-                // Normalize Arabic characters
                 const map = {
                     'أ': 'ا',
                     'إ': 'ا',
@@ -795,35 +750,82 @@
                     'ة': 'ه'
                 };
                 
-                // Replace characters
                 let normalized = '';
                 for (let char of name) {
                     normalized += map[char] || char;
                 }
                 
-                // Remove extra spaces
                 normalized = normalized.replace(/\s+/g, ' ').trim();
-                
                 return normalized;
             }
 
             function generateNameKey(name) {
-                // Normalize first
                 const normalized = normalizeArabicName(name);
-                
-                // Split into words
                 const words = normalized.split(/\s+/).filter(w => w.length > 0);
-                
-                // Take first 3 characters from each word
                 const parts = words.map(word => {
                     return word.length >= 3 ? word.substring(0, 3) : word;
                 });
-                
-                // Join all parts
                 return parts.join('');
             }
 
-            // ---------- SEAT SEARCH (original functionality with new paths) ----------
+            // ---------- LOAD INDEX.JSON ----------
+            async function loadIndex() {
+                if (indexData !== null) {
+                    return indexData;
+                }
+
+                try {
+                    const response = await fetch('data/index.json');
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    indexData = await response.json();
+                    return indexData;
+                } catch (err) {
+                    console.warn('Failed to load index.json:', err);
+                    throw new Error('فشل تحميل فهرس البيانات');
+                }
+            }
+
+            // ---------- FETCH STUDENT DATA USING INDEX ----------
+            async function fetchStudentData(seat) {
+                const seatStr = String(seat).trim();
+                
+                const index = await loadIndex();
+                
+                const entry = index[seatStr];
+                if (!entry) {
+                    return null;
+                }
+
+                const { folder, file } = entry;
+                const filePath = `data/${folder}/${file}`;
+
+                const cacheKey = `student_${folder}_${file}`;
+                if (cache.has(cacheKey)) {
+                    return cache.get(cacheKey);
+                }
+
+                try {
+                    const response = await fetch(filePath);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    const data = await response.json();
+                    
+                    if (!data || typeof data !== 'object' || !data.students) {
+                        throw new Error('بيانات غير صالحة');
+                    }
+                    
+                    cache.set(cacheKey, data);
+                    return data;
+                } catch (err) {
+                    console.warn('Failed to fetch student data:', err);
+                    throw new Error('فشل تحميل بيانات الطالب');
+                }
+            }
+
+            // ---------- SEAT SEARCH ----------
             async function searchBySeat(seatNumber) {
                 if (!isUnlocked) {
                     popupOverlay.classList.add('active');
@@ -842,42 +844,14 @@
                     return;
                 }
 
-                const prefix = seat.substring(0, 3);
-                if (prefix.length < 3) {
-                    renderError('رقم الجلوس يجب أن يكون مكوناً من 3 أرقام على الأقل');
-                    return;
-                }
-
                 showSkeleton();
 
                 try {
-                    // Determine folder: data_1, data_2, etc. based on prefix
-                    const folderNum = Math.ceil(parseInt(prefix) / 50);
-                    const folderName = `data_${folderNum}`;
+                    const data = await fetchStudentData(seat);
                     
-                    let data = null;
-                    const cacheKey = `seat_${folderName}`;
-                    
-                    if (cache.has(cacheKey)) {
-                        data = cache.get(cacheKey);
-                    } else {
-                        // NEW PATH: data/data_X/prefix.json
-                        const response = await fetch(`data/${folderName}/${prefix}.json`);
-                        
-                        if (response.status === 404) {
-                            renderNotAnnounced();
-                            return;
-                        }
-
-                        if (!response.ok) {
-                            throw new Error(`خطأ في التحميل (${response.status})`);
-                        }
-
-                        data = await response.json();
-                        if (!data || typeof data !== 'object' || !data.students) {
-                            throw new Error('بيانات غير صالحة');
-                        }
-                        cache.set(cacheKey, data);
+                    if (!data) {
+                        renderNotFound();
+                        return;
                     }
 
                     const student = data.students[seat];
@@ -891,7 +865,9 @@
                 } catch (err) {
                     console.warn('Seat search error:', err);
                     let msg = 'حدث خطأ أثناء البحث';
-                    if (err.message.includes('بيانات غير صالحة')) {
+                    if (err.message.includes('فشل تحميل فهرس البيانات')) {
+                        msg = 'فشل تحميل فهرس البيانات، تأكد من اتصالك بالإنترنت';
+                    } else if (err.message.includes('بيانات غير صالحة')) {
                         msg = 'صيغة البيانات غير صالحة';
                     } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
                         msg = 'فشل الاتصال، تحقق من اتصالك بالإنترنت';
@@ -902,7 +878,7 @@
                 }
             }
 
-            // ---------- NAME SEARCH (new functionality with new paths) ----------
+            // ---------- NAME SEARCH ----------
             async function searchByName(name) {
                 if (!isUnlocked) {
                     popupOverlay.classList.add('active');
@@ -916,23 +892,19 @@
                     return;
                 }
 
-                // Generate Name Key
                 const nameKey = generateNameKey(fullName);
                 if (nameKey.length < 2) {
                     renderError('الاسم قصير جداً، يرجى إدخال اسم كامل');
                     return;
                 }
 
-                // Take first 2 characters for filename
                 const filePrefix = nameKey.substring(0, 2);
                 
-                // Determine folder: names_1, names_2, etc.
-                // Use a hash based on the file prefix
                 let hash = 0;
                 for (let i = 0; i < filePrefix.length; i++) {
                     hash = (hash * 31 + filePrefix.charCodeAt(i)) & 0xFFFFFFFF;
                 }
-                const folderNum = (Math.abs(hash) % 100) + 1; // Spread across folders
+                const folderNum = (Math.abs(hash) % 100) + 1;
                 const folderName = `names_${folderNum}`;
 
                 showSkeleton();
@@ -944,7 +916,6 @@
                     if (cache.has(cacheKey)) {
                         data = cache.get(cacheKey);
                     } else {
-                        // NEW PATH: names/names_X/filePrefix.json
                         const response = await fetch(`names/${folderName}/${filePrefix}.json`);
                         
                         if (response.status === 404) {
@@ -963,7 +934,6 @@
                         cache.set(cacheKey, data);
                     }
 
-                    // Look for the name key in the data
                     const seatNumbers = data[nameKey];
                     if (!seatNumbers || seatNumbers.length === 0) {
                         renderNotFound();
@@ -971,11 +941,9 @@
                     }
 
                     if (seatNumbers.length === 1) {
-                        // Single result - fetch student data directly
                         const seat = seatNumbers[0];
                         await fetchAndRenderStudent(seat);
                     } else {
-                        // Multiple results - show list
                         renderDuplicateList(seatNumbers, fullName);
                     }
 
@@ -993,7 +961,7 @@
                 }
             }
 
-            // ---------- Fetch and render student by seat (helper for name search) ----------
+            // ---------- FETCH AND RENDER STUDENT ----------
             async function fetchAndRenderStudent(seat) {
                 const seatStr = String(seat).trim();
                 if (!/^\d+$/.test(seatStr)) {
@@ -1001,41 +969,14 @@
                     return;
                 }
 
-                const prefix = seatStr.substring(0, 3);
-                if (prefix.length < 3) {
-                    renderError('رقم الجلوس غير صالح');
-                    return;
-                }
-
                 showSkeleton();
 
                 try {
-                    const folderNum = Math.ceil(parseInt(prefix) / 50);
-                    const folderName = `data_${folderNum}`;
+                    const data = await fetchStudentData(seatStr);
                     
-                    let data = null;
-                    const cacheKey = `seat_${folderName}`;
-                    
-                    if (cache.has(cacheKey)) {
-                        data = cache.get(cacheKey);
-                    } else {
-                        // NEW PATH: data/data_X/prefix.json
-                        const response = await fetch(`data/${folderName}/${prefix}.json`);
-                        
-                        if (response.status === 404) {
-                            renderNotAnnounced();
-                            return;
-                        }
-
-                        if (!response.ok) {
-                            throw new Error(`خطأ في التحميل (${response.status})`);
-                        }
-
-                        data = await response.json();
-                        if (!data || typeof data !== 'object' || !data.students) {
-                            throw new Error('بيانات غير صالحة');
-                        }
-                        cache.set(cacheKey, data);
+                    if (!data) {
+                        renderNotFound();
+                        return;
                     }
 
                     const student = data.students[seatStr];
@@ -1049,8 +990,12 @@
                 } catch (err) {
                     console.warn('Fetch student error:', err);
                     let msg = 'حدث خطأ أثناء تحميل بيانات الطالب';
-                    if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+                    if (err.message.includes('فشل تحميل فهرس البيانات')) {
+                        msg = 'فشل تحميل فهرس البيانات';
+                    } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
                         msg = 'فشل الاتصال، تحقق من اتصالك بالإنترنت';
+                    } else {
+                        msg = err.message || 'خطأ غير معروف';
                     }
                     renderError(msg);
                 }
@@ -1067,14 +1012,23 @@
                 `;
             }
 
+            // ---------- UPDATED RENDER STUDENT ----------
             function renderStudent(seat, studentData) {
-                const statusText = STATUS[studentData.s] || "غير معروف";
+                // Read status directly from JSON - no conversion
+                const statusText = studentData.s || "غير معروف";
+                
+                // Determine badge class based on status text
                 let badgeClass = 'status-badge';
-                if (studentData.s === 0 || studentData.s === 1 || studentData.s === 2) {
+                
+                // Check if status contains success keywords
+                if (statusText.includes('ناجح')) {
                     badgeClass += ' success';
-                } else if (studentData.s === 4) {
+                } 
+                // Check if status contains fail keywords
+                else if (statusText.includes('راسب')) {
                     badgeClass += ' fail';
                 }
+                // Other statuses use default color
 
                 const percentage = ((studentData.t / TOTAL_SCORE) * 100).toFixed(2);
 
@@ -1125,7 +1079,6 @@
                     </div>
                 `;
 
-                // Add click listeners to duplicate items
                 document.querySelectorAll('.duplicate-item').forEach(item => {
                     item.addEventListener('click', function() {
                         const seat = this.dataset.seat;
@@ -1190,7 +1143,7 @@
             setMode('seat');
             searchInput.focus();
 
-            console.log('✅ VexoLab System Ready (Dark Tech Style - with Name Search)');
+            console.log('✅ VexoLab System Ready (Using index.json with text status)');
         })();
     </script>
 </body>
